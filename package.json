@@ -76,6 +76,17 @@
   },
   "packageManager": "pnpm@11.0.0",
   "engines": {
-    "node": ">=20.0.0"
+    "node": "26.x"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@swc/core",
+      "esbuild",
+      "sharp"
+    ],
+    "ignoredBuiltDependencies": [
+      "@vaadin/vaadin-usage-statistics"
+    ]
   }
 }
