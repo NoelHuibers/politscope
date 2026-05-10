@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
 import { MPProfile } from "@/components/profile/MPProfile";
 import { MPS } from "@/data/mps";
 
@@ -18,5 +19,9 @@ export default async function MPProfilePage({
   const mp = MPS.find((m) => m.id === id);
   if (!mp) notFound();
 
-  return <MPProfile mpId={id} />;
+  return (
+    <Suspense>
+      <MPProfile mpId={id} />
+    </Suspense>
+  );
 }
