@@ -1,0 +1,66 @@
+{
+  "App": {
+    "name": "PolitScope",
+    "tagline": "β · Bundestag",
+    "searchPlaceholder": "Search speeches, topics, people…",
+    "searchExample": "Migration debate 2015–2024"
+  },
+  "TopBar": {
+    "methodology": "Methodology",
+    "share": "Share",
+    "themeLight": "Light",
+    "themeDark": "Dark"
+  },
+  "LeftRail": {
+    "period": "Time range",
+    "wahlperiode": "Legislature",
+    "factions": "Factions",
+    "speaker": "Speaker",
+    "addPerson": "Add person…",
+    "resetFilters": "Reset filters",
+    "speechesCount": "{count, number} speeches"
+  },
+  "BottomStrip": {
+    "asOf": "As of",
+    "recentSessions": "Recent sessions",
+    "dataSource": "Data source",
+    "active": "live"
+  },
+  "Dashboard": {
+    "atlas": {
+      "eyebrow": "Map · Embedding atlas",
+      "title": "Speeches projected into semantic space",
+      "hint": "Each point is one speech. Clusters reveal topics. UMAP over {count, number} speeches.",
+      "resetView": "Reset view",
+      "newThisWeek": "New this week · {count, number}"
+    },
+    "sankey": {
+      "eyebrow": "Topic flow · 1990 → today",
+      "title": "How topics grow, shrink, and shift across legislatures",
+      "modes": {
+        "sankey": "Sankey",
+        "stream": "Stream"
+      }
+    },
+    "positioning": {
+      "eyebrow": "Speaker positioning",
+      "title": "Who sounds like a different faction?",
+      "axisHint": "Axis: {a} ↔ {b} · Topic: {topic}"
+    },
+    "scattertext": {
+      "eyebrow": "Word comparison · Scattertext",
+      "title": "What distinguishes {a} vs. {b}?",
+      "hint": "Click a word for example sentences"
+    },
+    "fingerprint": {
+      "eyebrow": "Speaker fingerprint",
+      "title": "Rhetorical profiles at a glance",
+      "hint": "5 traits × 16 quarters (1990 → 2026)",
+      "addSpeaker": "Speaker"
+    }
+  },
+  "Glossary": {
+    "styleVsVote": "Speaking style ≠ voting behavior.",
+    "styleVsVoteBody": "This view describes rhetorical similarity, not ideology and not voting record."
+  }
+}

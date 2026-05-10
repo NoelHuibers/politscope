@@ -1,0 +1,323 @@
+/* PolitScope — global stylesheet (Tailwind v4 + ported design tokens) */
+
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+@import "tailwindcss";
+
+/* ─── Static palette tokens — usable as Tailwind utilities (bg-p-cdu, text-seq-3, …) */
+@theme {
+  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  --font-sans: "IBM Plex Sans", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Party colors (canonical hexes — only --color-p-cdu shifts in dark mode, see below) */
+  --color-p-cdu: #111111;
+  --color-p-spd: #c8102e;
+  --color-p-grn: #4a8a2c;
+  --color-p-fdp: #ebcd14;
+  --color-p-lnk: #b3147f;
+  --color-p-afd: #1f6dbe;
+  --color-p-csu: #4ea3d8;
+  --color-p-bsw: #6f4ea8;
+  --color-p-none: #8b8478;
+
+  /* Sequential scale (warm → cool) */
+  --color-seq-0: #f4ead2;
+  --color-seq-1: #ecc585;
+  --color-seq-2: #df8e62;
+  --color-seq-3: #b85a52;
+  --color-seq-4: #743a5d;
+  --color-seq-5: #2f3a5e;
+
+  /* Diverging (alignment scores) */
+  --color-div-neg: #b85a52;
+  --color-div-mid: #d6cfb8;
+  --color-div-pos: #2f6b8f;
+}
+
+/* ─── Theme-aware tokens — mirror the mockup's --bg/--ink/--accent/etc. so component
+   styles can use them either via Tailwind (`bg-bg`, `text-ink`) or directly
+   (`var(--bg)`). The values switch with `[data-theme="dark"]`. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-hairline: var(--hairline);
+  --color-hairline-2: var(--hairline-2);
+  --color-accent: var(--accent);
+  --color-map-bg: var(--map-bg);
+  --color-map-grid: var(--map-grid);
+}
+
+/* LIGHT MODE — default */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f0e8;
+  --bg-2: #ebe7dc;
+  --panel: #ffffff;
+  --panel-2: #faf7f0;
+  --ink: #15140f;
+  --ink-2: #3a352d;
+  --muted: #6b6357;
+  --hairline: rgba(20, 18, 12, 0.1);
+  --hairline-2: rgba(20, 18, 12, 0.05);
+  --accent: #b85a52;
+  --selection: rgba(184, 90, 82, 0.18);
+  --shadow-sm: 0 1px 2px rgba(20, 18, 12, 0.04);
+  --shadow: 0 4px 18px rgba(20, 18, 12, 0.06), 0 1px 2px rgba(20, 18, 12, 0.04);
+  --map-bg: #efebe0;
+  --map-grid: rgba(20, 18, 12, 0.04);
+  --p-cdu-display: #111111;
+  --p-cdu-ring: rgba(0, 0, 0, 0);
+}
+
+/* DARK MODE */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e1014;
+  --bg-2: #14171c;
+  --panel: #181c22;
+  --panel-2: #1e2229;
+  --ink: #e8e6e0;
+  --ink-2: #c5c0b6;
+  --muted: #7d7669;
+  --hairline: rgba(255, 255, 250, 0.09);
+  --hairline-2: rgba(255, 255, 250, 0.04);
+  --accent: #d97a6e;
+  --selection: rgba(217, 122, 110, 0.22);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --map-bg: #0a0c10;
+  --map-grid: rgba(255, 255, 250, 0.03);
+  /* CDU "black" on dark → keep as deep ink with a hairline ring so it
+     reads as a distinct dot, not "no party". */
+  --p-cdu-display: #1a1a1d;
+  --p-cdu-ring: rgba(232, 230, 224, 0.55);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+  }
+  ::selection {
+    background: var(--selection);
+  }
+}
+
+/* ─── Type scale (carry-over from tokens.css) */
+@layer components {
+  .t-display {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 38px;
+    line-height: 1.08;
+    letter-spacing: -0.012em;
+  }
+  .t-h1 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1.15;
+    letter-spacing: -0.008em;
+  }
+  .t-h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.25;
+    letter-spacing: -0.004em;
+  }
+  .t-eyebrow {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 10.5px;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .t-label {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 11.5px;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+  }
+  .t-body {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .t-small {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+  .t-quote {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.4;
+    font-style: italic;
+  }
+  .t-num {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .t-meta {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 10.5px;
+    letter-spacing: 0.02em;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hyphenate {
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphenate-limit-chars: 6 3 3;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .hairline {
+    border: 1px solid var(--hairline);
+  }
+  .hairline-b {
+    border-bottom: 1px solid var(--hairline);
+  }
+  .hairline-t {
+    border-top: 1px solid var(--hairline);
+  }
+  .hairline-r {
+    border-right: 1px solid var(--hairline);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 11px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--bg-2);
+    color: var(--ink-2);
+    border: 1px solid var(--hairline);
+  }
+  .chip .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  .btn-ghost {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 500;
+    background: transparent;
+    border: 1px solid var(--hairline);
+    color: var(--ink-2);
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-ghost:hover {
+    background: var(--bg-2);
+    color: var(--ink);
+  }
+
+  /* AI-generated marker */
+  .ki-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 1px 6px 1px 4px;
+    border-radius: 3px;
+    border: 1px dashed var(--hairline);
+    background: transparent;
+  }
+  .ki-tag::before {
+    content: "";
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-seq-3);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-seq-3) 25%, transparent);
+  }
+
+  .scroll-y {
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .scroll-y::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scroll-y::-webkit-scrollbar-thumb {
+    background: var(--hairline);
+    border-radius: 3px;
+  }
+
+  .pulse {
+    animation: ps-pulse 2s ease-out infinite;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--hairline-2), var(--hairline), var(--hairline-2));
+    background-size: 200% 100%;
+    animation: sk 1.4s ease-in-out infinite;
+    border-radius: 3px;
+  }
+}
+
+@keyframes ps-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 122, 110, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(217, 122, 110, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 122, 110, 0);
+  }
+}
+
+@keyframes sk {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

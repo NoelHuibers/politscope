@@ -1,0 +1,66 @@
+{
+  "App": {
+    "name": "PolitScope",
+    "tagline": "β · Bundestag",
+    "searchPlaceholder": "Reden, Themen, Personen suchen…",
+    "searchExample": "Migrationsdebatte 2015–2024"
+  },
+  "TopBar": {
+    "methodology": "Methodologie",
+    "share": "Teilen",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel"
+  },
+  "LeftRail": {
+    "period": "Zeitraum",
+    "wahlperiode": "Wahlperiode",
+    "factions": "Fraktionen",
+    "speaker": "Speaker",
+    "addPerson": "Person hinzufügen…",
+    "resetFilters": "Filter zurücksetzen",
+    "speechesCount": "{count, number} Reden"
+  },
+  "BottomStrip": {
+    "asOf": "Stand",
+    "recentSessions": "Letzte Sitzungen",
+    "dataSource": "Datenquelle",
+    "active": "aktiv"
+  },
+  "Dashboard": {
+    "atlas": {
+      "eyebrow": "Karte · Embedding-Atlas",
+      "title": "Reden, projiziert in den semantischen Raum",
+      "hint": "Jeder Punkt ist eine Rede. Cluster zeigen Themen. UMAP über {count, number} Reden.",
+      "resetView": "Ansicht zurücksetzen",
+      "newThisWeek": "Neu in dieser Woche · {count, number}"
+    },
+    "sankey": {
+      "eyebrow": "Themenfluss · 1990 → heute",
+      "title": "Wie Themen über Wahlperioden wachsen, schrumpfen, sich verschieben",
+      "modes": {
+        "sankey": "Sankey",
+        "stream": "Stream"
+      }
+    },
+    "positioning": {
+      "eyebrow": "Sprecherpositionierung",
+      "title": "Wer klingt wie eine andere Fraktion?",
+      "axisHint": "Achse: {a} ↔ {b} · Thema: {topic}"
+    },
+    "scattertext": {
+      "eyebrow": "Wortvergleich · Scattertext",
+      "title": "Was unterscheidet {a} vs. {b}?",
+      "hint": "Klick auf ein Wort → Beispielsätze"
+    },
+    "fingerprint": {
+      "eyebrow": "Sprecher-Fingerprint",
+      "title": "Rhetorische Profile auf einen Blick",
+      "hint": "5 Merkmale × 16 Quartale (1990 → 2026)",
+      "addSpeaker": "Sprecher"
+    }
+  },
+  "Glossary": {
+    "styleVsVote": "Sprachstil ≠ Stimmverhalten.",
+    "styleVsVoteBody": "Diese Ansicht beschreibt rhetorische Ähnlichkeit, nicht Ideologie und nicht Abstimmungsverhalten."
+  }
+}
