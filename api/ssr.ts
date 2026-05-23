@@ -7,7 +7,7 @@ export const config = {
 };
 
 export default async function handler(request: Request): Promise<Response> {
-  const { pathname } = new URL(request.url);
+  const { pathname } = new URL(request.url, "http://localhost");
   if (pathname === "/api/health") {
     return health();
   }
