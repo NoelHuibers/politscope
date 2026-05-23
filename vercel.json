@@ -3,10 +3,5 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist/client",
   "framework": null,
-  "functions": {
-    "api/ssr.ts": {
-      "runtime": "nodejs22.x"
-    }
-  },
   "rewrites": [{ "source": "/(.*)", "destination": "/api/ssr" }]
 }
