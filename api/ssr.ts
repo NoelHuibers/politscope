@@ -47,7 +47,7 @@ type VercelRequestLike = {
   body?: BodyInit | null;
 };
 
-export default async function handler(request: VercelRequestLike): Promise<Response> {
+async function handler(request: VercelRequestLike): Promise<Response> {
   const host =
     getHeader(request.headers, "x-forwarded-host") ??
     getHeader(request.headers, "host") ??
@@ -70,3 +70,11 @@ export default async function handler(request: VercelRequestLike): Promise<Respo
 
   return server.fetch(webRequest);
 }
+
+export const GET = handler;
+export const POST = handler;
+export const PUT = handler;
+export const PATCH = handler;
+export const DELETE = handler;
+export const HEAD = handler;
+export const OPTIONS = handler;

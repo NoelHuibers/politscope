@@ -22,7 +22,7 @@ vi.mock("./_health.js", () => ({
 
 describe("api/ssr.ts Vercel adapter", () => {
   it("handles Node-style request (headers as plain object, url as path)", async () => {
-    const { default: handler } = await import("./ssr.js");
+    const { GET: handler } = await import("./ssr.js");
 
     const request = {
       url: "/",
@@ -42,7 +42,7 @@ describe("api/ssr.ts Vercel adapter", () => {
   });
 
   it("handles a path with query string", async () => {
-    const { default: handler } = await import("./ssr.js");
+    const { GET: handler } = await import("./ssr.js");
 
     const request = {
       url: "/de/abgeordnete/123?foo=bar",
@@ -56,7 +56,7 @@ describe("api/ssr.ts Vercel adapter", () => {
   });
 
   it("short-circuits /api/health before delegating to TanStack server", async () => {
-    const { default: handler } = await import("./ssr.js");
+    const { GET: handler } = await import("./ssr.js");
 
     const request = {
       url: "/api/health",
@@ -71,7 +71,7 @@ describe("api/ssr.ts Vercel adapter", () => {
   });
 
   it("handles Web-Standard request (Headers instance, absolute URL)", async () => {
-    const { default: handler } = await import("./ssr.js");
+    const { GET: handler } = await import("./ssr.js");
 
     const headers = new Headers();
     headers.set("host", "example.test");
@@ -89,7 +89,7 @@ describe("api/ssr.ts Vercel adapter", () => {
   });
 
   it("falls back to localhost when no host header is provided", async () => {
-    const { default: handler } = await import("./ssr.js");
+    const { GET: handler } = await import("./ssr.js");
 
     const request = {
       url: "/",
