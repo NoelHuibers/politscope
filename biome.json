@@ -136,6 +136,12 @@
         "rules": {
           "correctness": {
             "noUndeclaredDependencies": "off"
+          },
+          "complexity": {
+            "noExcessiveCognitiveComplexity": {
+              "level": "error",
+              "options": { "maxAllowedComplexity": 30 }
+            }
           }
         }
       }
