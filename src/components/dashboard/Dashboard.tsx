@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { Icon } from "@/components/Icon";
@@ -12,6 +13,7 @@ import { SankeyTimeline } from "@/components/viz/SankeyTimeline";
 import { Scattertext } from "@/components/viz/Scattertext";
 import { Sparkline } from "@/components/viz/Sparkline";
 import { MPS } from "@/data/mps";
+import { getAtlasPoints } from "@/lib/server/atlas";
 import { useUI } from "@/state/ui";
 import { PanelHead } from "./PanelHead";
 
@@ -33,6 +35,11 @@ export function Dashboard() {
   const locale = (params.locale as string | undefined) ?? "de";
 
   const [hoveredId, setHoveredId] = useState<string | null>("oezdemir");
+
+  const atlasQuery = useQuery({
+    queryKey: ["atlas-points"],
+    queryFn: () => getAtlasPoints(),
+  });
   const [hoveredW, setHoveredW] = useState<string | null>(null);
   const [sankeyMode, setSankeyMode] = useState<"sankey" | "stream">("sankey");
 
@@ -156,7 +163,13 @@ export function Dashboard() {
               </div>
 
               <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
-                <EmbeddingMap width={680} height={520} dark={dark} newThisWeek />
+                <EmbeddingMap
+                  width={680}
+                  height={520}
+                  dark={dark}
+                  newThisWeek
+                  realPoints={atlasQuery.data?.points ?? null}
+                />
               </div>
 
               <div

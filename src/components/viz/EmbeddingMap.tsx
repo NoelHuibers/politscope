@@ -1,5 +1,14 @@
 import { useMemo } from "react";
+import { PARTY, type PartyId } from "@/data/parties";
 import { TOPICS, type TopicId } from "@/data/topics";
+
+/** Real point from the atlas server function — see src/lib/server/atlas.ts */
+export type AtlasRealPoint = {
+  id: string;
+  x: number;
+  y: number;
+  party: string;
+};
 
 type Props = {
   width?: number;
@@ -7,6 +16,12 @@ type Props = {
   dark?: boolean;
   highlightTopic?: TopicId | null;
   newThisWeek?: boolean;
+  /**
+   * Real atlas points from the server function. If provided (length > 0),
+   * replaces the synthetic mock points. Mock cluster labels still render
+   * because we don't have topic clustering yet (#17).
+   */
+  realPoints?: AtlasRealPoint[] | null;
 };
 
 type Point = {
@@ -27,6 +42,7 @@ export function EmbeddingMap({
   dark = false,
   highlightTopic = null,
   newThisWeek = false,
+  realPoints = null,
 }: Props) {
   const points = useMemo<Point[]>(() => {
     const out: Point[] = [];
@@ -111,21 +127,27 @@ export function EmbeddingMap({
         );
       })}
 
-      {points.map((p, i) => {
-        const dim = highlightTopic && highlightTopic !== p.tid;
-        const isFresh = p.fresh && newThisWeek;
-        return (
-          <circle
-            // biome-ignore lint/suspicious/noArrayIndexKey: stable seeded order, no insertions
-            key={i}
-            cx={X(p.x)}
-            cy={Y(p.y)}
-            r={isFresh ? 2.2 : 1.2}
-            fill={isFresh ? "var(--accent)" : dim ? dotColorDim : dotColor}
-            opacity={isFresh ? 1 : dim ? 1 : 0.92}
-          />
-        );
-      })}
+      {realPoints && realPoints.length > 0
+        ? realPoints.map((p) => {
+            const partyDef = PARTY[p.party as PartyId];
+            const fill = partyDef ? partyDef.colorVar : dotColor;
+            return <circle key={p.id} cx={X(p.x)} cy={Y(p.y)} r={2.4} fill={fill} opacity={0.85} />;
+          })
+        : points.map((p, i) => {
+            const dim = highlightTopic && highlightTopic !== p.tid;
+            const isFresh = p.fresh && newThisWeek;
+            return (
+              <circle
+                // biome-ignore lint/suspicious/noArrayIndexKey: stable seeded order, no insertions
+                key={i}
+                cx={X(p.x)}
+                cy={Y(p.y)}
+                r={isFresh ? 2.2 : 1.2}
+                fill={isFresh ? "var(--accent)" : dim ? dotColorDim : dotColor}
+                opacity={isFresh ? 1 : dim ? 1 : 0.92}
+              />
+            );
+          })}
 
       {TOPICS.map((t) => {
         const big = (["wirt", "soz", "umw", "auss", "haus"] as const).includes(t.id as never);
