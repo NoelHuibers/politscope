@@ -11,7 +11,11 @@ export default defineConfig({
     globals: false,
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
-    include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.{test,spec}.{ts,tsx}"],
+    include: [
+      "src/**/*.{test,spec}.{ts,tsx}",
+      "tests/**/*.{test,spec}.{ts,tsx}",
+      "api/**/*.{test,spec}.{ts,tsx}",
+    ],
     exclude: [
       "node_modules",
       "dist",
@@ -27,7 +31,11 @@ export default defineConfig({
     typecheck: {
       enabled: true,
       tsconfig: "./tsconfig.json",
-      include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.{test,spec}.{ts,tsx}"],
+      include: [
+        "src/**/*.{test,spec}.{ts,tsx}",
+        "tests/**/*.{test,spec}.{ts,tsx}",
+        "api/**/*.{test,spec}.{ts,tsx}",
+      ],
     },
     coverage: {
       provider: "v8",

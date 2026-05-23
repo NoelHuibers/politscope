@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vinxi dev",
-    "build": "vinxi build",
-    "start": "vinxi start",
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "vite preview",
     "messages:compile": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide",
     "messages:watch": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --watch",
     "check": "biome check .",
