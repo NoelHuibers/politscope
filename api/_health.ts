@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
-import { db } from "../src/lib/db";
-import { mps, speeches } from "../src/lib/db/schema";
+import { db } from "../src/lib/db/index.js";
+import { mps, speeches } from "../src/lib/db/schema.js";
 
 const HEADERS = {
   "content-type": "application/json; charset=utf-8",

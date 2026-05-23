@@ -1,6 +1,6 @@
 // @ts-expect-error — built file resolved at runtime by Vercel
 import server from "../dist/server/server.js";
-import { health } from "./_health";
+import { health } from "./_health.js";
 
 export const config = {
   runtime: "nodejs",

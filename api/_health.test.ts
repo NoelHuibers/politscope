@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { health } from "./_health";
+import { health } from "./_health.js";
 
 describe("health endpoint", () => {
   it.skipIf(!process.env.DATABASE_URL)(
