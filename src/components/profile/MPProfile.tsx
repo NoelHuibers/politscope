@@ -1,5 +1,3 @@
-"use client";
-
 import { Icon } from "@/components/Icon";
 import { BottomStrip } from "@/components/layout/BottomStrip";
 import { LeftRail } from "@/components/layout/LeftRail";

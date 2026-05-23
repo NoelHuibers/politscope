@@ -1,11 +1,7 @@
-"use client";
-
-import { useTranslations } from "next-intl";
 import { RECENT_DEBATES } from "@/data/debates";
+import * as m from "@/paraglide/messages";
 
 export function BottomStrip() {
-  const t = useTranslations("BottomStrip");
-
   return (
     <div
       style={{
@@ -31,7 +27,7 @@ export function BottomStrip() {
             fontWeight: 600,
           }}
         >
-          {t("asOf")}
+          {m.bottom_as_of()}
         </div>
         <div
           style={{
@@ -54,7 +50,7 @@ export function BottomStrip() {
 
       <div style={{ display: "flex", gap: 16, overflow: "hidden", justifyContent: "center" }}>
         <span className="t-eyebrow" style={{ alignSelf: "center" }}>
-          {t("recentSessions")}
+          {m.bottom_recent_sessions()}
         </span>
         {RECENT_DEBATES.slice(0, 4).map((d) => (
           <div
@@ -96,9 +92,10 @@ export function BottomStrip() {
       </div>
 
       <div style={{ textAlign: "right" }}>
-        <div className="t-eyebrow">{t("dataSource")}</div>
+        <div className="t-eyebrow">{m.bottom_data_source()}</div>
         <div style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, color: "var(--ink-2)" }}>
-          bundestag.de · täglich · <span style={{ color: "var(--accent)" }}>{t("active")}</span>
+          bundestag.de · täglich ·{" "}
+          <span style={{ color: "var(--accent)" }}>{m.bottom_active()}</span>
         </div>
       </div>
     </div>

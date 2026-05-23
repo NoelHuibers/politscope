@@ -1,5 +1,3 @@
-"use client";
-
 import { PERIODS } from "@/data/periods";
 import { TOPIC_FLOWS, TOPICS, type TopicId } from "@/data/topics";
 
@@ -124,7 +122,7 @@ export function SankeyTimeline({
                 {Array.from({ length: nP - 1 }).map((_, i) => {
                   const a = stackTop[i]?.find((s) => s.tid === b.tid);
                   const c = stackTop[i + 1]?.find((s) => s.tid === b.tid);
-                  if (!a || !c) return null;
+                  if (!(a && c)) return null;
                   return (
                     <path
                       // biome-ignore lint/suspicious/noArrayIndexKey: stable period index

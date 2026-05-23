@@ -1,7 +1,7 @@
-"use client";
-
 import { PARTY, type PartyId } from "@/data/parties";
 import { SCATTER_WORDS } from "@/data/scatter-words";
+
+const noop = (_w: string | null): void => undefined;
 
 type Props = {
   width?: number;
@@ -20,8 +20,9 @@ export function Scattertext({
   partyA = "afd",
   partyB = "grn",
   hoveredW = null,
-  onHover = () => {},
+  onHover,
 }: Props) {
+  const handleHover = onHover ?? noop;
   const pad = { l: 28, r: 12, t: 22, b: 28 };
   const W = width;
   const H = height;
@@ -117,8 +118,8 @@ export function Scattertext({
             fill={fill}
             opacity={dim ? 0.25 : 1}
             textAnchor="middle"
-            onMouseEnter={() => onHover(s.w)}
-            onMouseLeave={() => onHover(null)}
+            onMouseEnter={() => handleHover(s.w)}
+            onMouseLeave={() => handleHover(null)}
             style={{ cursor: "pointer" }}
           >
             {s.w}

@@ -1,66 +1,56 @@
 {
-  "App": {
-    "name": "PolitScope",
-    "tagline": "β · Bundestag",
-    "searchPlaceholder": "Reden, Themen, Personen suchen…",
-    "searchExample": "Migrationsdebatte 2015–2024"
-  },
-  "TopBar": {
-    "methodology": "Methodologie",
-    "share": "Teilen",
-    "themeLight": "Hell",
-    "themeDark": "Dunkel"
-  },
-  "LeftRail": {
-    "period": "Zeitraum",
-    "wahlperiode": "Wahlperiode",
-    "factions": "Fraktionen",
-    "speaker": "Speaker",
-    "addPerson": "Person hinzufügen…",
-    "resetFilters": "Filter zurücksetzen",
-    "speechesCount": "{count, number} Reden"
-  },
-  "BottomStrip": {
-    "asOf": "Stand",
-    "recentSessions": "Letzte Sitzungen",
-    "dataSource": "Datenquelle",
-    "active": "aktiv"
-  },
-  "Dashboard": {
-    "atlas": {
-      "eyebrow": "Karte · Embedding-Atlas",
-      "title": "Reden, projiziert in den semantischen Raum",
-      "hint": "Jeder Punkt ist eine Rede. Cluster zeigen Themen. UMAP über {count, number} Reden.",
-      "resetView": "Ansicht zurücksetzen",
-      "newThisWeek": "Neu in dieser Woche · {count, number}"
-    },
-    "sankey": {
-      "eyebrow": "Themenfluss · 1990 → heute",
-      "title": "Wie Themen über Wahlperioden wachsen, schrumpfen, sich verschieben",
-      "modes": {
-        "sankey": "Sankey",
-        "stream": "Stream"
-      }
-    },
-    "positioning": {
-      "eyebrow": "Sprecherpositionierung",
-      "title": "Wer klingt wie eine andere Fraktion?",
-      "axisHint": "Achse: {a} ↔ {b} · Thema: {topic}"
-    },
-    "scattertext": {
-      "eyebrow": "Wortvergleich · Scattertext",
-      "title": "Was unterscheidet {a} vs. {b}?",
-      "hint": "Klick auf ein Wort → Beispielsätze"
-    },
-    "fingerprint": {
-      "eyebrow": "Sprecher-Fingerprint",
-      "title": "Rhetorische Profile auf einen Blick",
-      "hint": "5 Merkmale × 16 Quartale (1990 → 2026)",
-      "addSpeaker": "Sprecher"
-    }
-  },
-  "Glossary": {
-    "styleVsVote": "Sprachstil ≠ Stimmverhalten.",
-    "styleVsVoteBody": "Diese Ansicht beschreibt rhetorische Ähnlichkeit, nicht Ideologie und nicht Abstimmungsverhalten."
-  }
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "app_name": "PolitScope",
+  "app_tagline": "β · Bundestag",
+  "app_search_placeholder": "Reden, Themen, Personen suchen…",
+  "app_search_example": "Migrationsdebatte 2015–2024",
+
+  "topbar_methodology": "Methodologie",
+  "topbar_share": "Teilen",
+  "topbar_theme_light": "Hell",
+  "topbar_theme_dark": "Dunkel",
+
+  "leftrail_period": "Zeitraum",
+  "leftrail_wahlperiode": "Wahlperiode",
+  "leftrail_factions": "Fraktionen",
+  "leftrail_speaker": "Speaker",
+  "leftrail_add_person": "Person hinzufügen…",
+  "leftrail_reset_filters": "Filter zurücksetzen",
+  "leftrail_open": "Filter öffnen",
+  "leftrail_close": "Filter schließen",
+
+  "bottom_as_of": "Stand",
+  "bottom_recent_sessions": "Letzte Sitzungen",
+  "bottom_data_source": "Datenquelle",
+  "bottom_active": "aktiv",
+
+  "atlas_eyebrow": "Karte · Embedding-Atlas",
+  "atlas_title": "Reden, projiziert in den semantischen Raum",
+  "atlas_hint": "Jeder Punkt ist eine Rede. Cluster zeigen Themen. UMAP über 1 248 318 Reden.",
+  "atlas_reset_view": "Ansicht zurücksetzen",
+  "atlas_new_this_week": "1 248 neue Reden seit Montag",
+  "atlas_search_placeholder": "Reden zu „Migration“ finden…",
+
+  "sankey_eyebrow": "Themenfluss · 1990 → heute",
+  "sankey_title": "Wie Themen über Wahlperioden wachsen, schrumpfen, sich verschieben",
+  "sankey_hint": "Aktuell hervorgehoben: Migration",
+  "sankey_mode_sankey": "Sankey",
+  "sankey_mode_stream": "Stream",
+
+  "positioning_eyebrow": "Sprecherpositionierung",
+  "positioning_title": "Wer klingt wie eine andere Fraktion?",
+  "positioning_hint": "Achse: AfD ↔ Grüne · Thema: Alle",
+  "positioning_detail": "Detail",
+
+  "scattertext_eyebrow": "Wortvergleich · Scattertext",
+  "scattertext_title": "Was unterscheidet AfD vs. Grüne?",
+  "scattertext_hint": "Klick auf ein Wort → Beispielsätze",
+
+  "fingerprint_eyebrow": "Sprecher-Fingerprint",
+  "fingerprint_title": "Rhetorische Profile auf einen Blick",
+  "fingerprint_hint": "5 Merkmale × 16 Quartale (1990 → 2026) · 8 Top-Sprecher",
+  "fingerprint_add_speaker": "Sprecher",
+
+  "glossary_style_vs_vote_lead": "Sprachstil ≠ Stimmverhalten.",
+  "glossary_style_vs_vote_body": "Diese Ansicht beschreibt rhetorische Ähnlichkeit, nicht Ideologie und nicht Abstimmungsverhalten."
 }

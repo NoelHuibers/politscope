@@ -1,8 +1,8 @@
-"use client";
-
 import { MPS } from "@/data/mps";
 import { PARTY, type PartyId } from "@/data/parties";
 import { PartyDotSvg } from "./PartyDotSvg";
+
+const noop = (_id: string | null): void => undefined;
 
 type Props = {
   width?: number;
@@ -23,8 +23,9 @@ export function PositioningScatter({
   axisB = "grn",
   topic = "Alle Themen",
   hoveredId = null,
-  onHover = () => {},
+  onHover,
 }: Props) {
+  const handleHover = onHover ?? noop;
   const pad = { l: 36, r: 12, t: 22, b: 28 };
   const W = width;
   const H = height;
@@ -128,8 +129,8 @@ export function PositioningScatter({
         return (
           <g
             key={m.id}
-            onMouseEnter={() => onHover(m.id)}
-            onMouseLeave={() => onHover(null)}
+            onMouseEnter={() => handleHover(m.id)}
+            onMouseLeave={() => handleHover(null)}
             style={{ cursor: "pointer" }}
           >
             {isOutlier && (

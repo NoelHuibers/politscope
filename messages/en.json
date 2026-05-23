@@ -1,66 +1,56 @@
 {
-  "App": {
-    "name": "PolitScope",
-    "tagline": "β · Bundestag",
-    "searchPlaceholder": "Search speeches, topics, people…",
-    "searchExample": "Migration debate 2015–2024"
-  },
-  "TopBar": {
-    "methodology": "Methodology",
-    "share": "Share",
-    "themeLight": "Light",
-    "themeDark": "Dark"
-  },
-  "LeftRail": {
-    "period": "Time range",
-    "wahlperiode": "Legislature",
-    "factions": "Factions",
-    "speaker": "Speaker",
-    "addPerson": "Add person…",
-    "resetFilters": "Reset filters",
-    "speechesCount": "{count, number} speeches"
-  },
-  "BottomStrip": {
-    "asOf": "As of",
-    "recentSessions": "Recent sessions",
-    "dataSource": "Data source",
-    "active": "live"
-  },
-  "Dashboard": {
-    "atlas": {
-      "eyebrow": "Map · Embedding atlas",
-      "title": "Speeches projected into semantic space",
-      "hint": "Each point is one speech. Clusters reveal topics. UMAP over {count, number} speeches.",
-      "resetView": "Reset view",
-      "newThisWeek": "New this week · {count, number}"
-    },
-    "sankey": {
-      "eyebrow": "Topic flow · 1990 → today",
-      "title": "How topics grow, shrink, and shift across legislatures",
-      "modes": {
-        "sankey": "Sankey",
-        "stream": "Stream"
-      }
-    },
-    "positioning": {
-      "eyebrow": "Speaker positioning",
-      "title": "Who sounds like a different faction?",
-      "axisHint": "Axis: {a} ↔ {b} · Topic: {topic}"
-    },
-    "scattertext": {
-      "eyebrow": "Word comparison · Scattertext",
-      "title": "What distinguishes {a} vs. {b}?",
-      "hint": "Click a word for example sentences"
-    },
-    "fingerprint": {
-      "eyebrow": "Speaker fingerprint",
-      "title": "Rhetorical profiles at a glance",
-      "hint": "5 traits × 16 quarters (1990 → 2026)",
-      "addSpeaker": "Speaker"
-    }
-  },
-  "Glossary": {
-    "styleVsVote": "Speaking style ≠ voting behavior.",
-    "styleVsVoteBody": "This view describes rhetorical similarity, not ideology and not voting record."
-  }
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "app_name": "PolitScope",
+  "app_tagline": "β · Bundestag",
+  "app_search_placeholder": "Search speeches, topics, people…",
+  "app_search_example": "Migration debate 2015–2024",
+
+  "topbar_methodology": "Methodology",
+  "topbar_share": "Share",
+  "topbar_theme_light": "Light",
+  "topbar_theme_dark": "Dark",
+
+  "leftrail_period": "Time range",
+  "leftrail_wahlperiode": "Legislature",
+  "leftrail_factions": "Factions",
+  "leftrail_speaker": "Speaker",
+  "leftrail_add_person": "Add person…",
+  "leftrail_reset_filters": "Reset filters",
+  "leftrail_open": "Open filters",
+  "leftrail_close": "Close filters",
+
+  "bottom_as_of": "As of",
+  "bottom_recent_sessions": "Recent sessions",
+  "bottom_data_source": "Data source",
+  "bottom_active": "live",
+
+  "atlas_eyebrow": "Map · Embedding atlas",
+  "atlas_title": "Speeches projected into semantic space",
+  "atlas_hint": "Each point is one speech. Clusters reveal topics. UMAP over 1,248,318 speeches.",
+  "atlas_reset_view": "Reset view",
+  "atlas_new_this_week": "1,248 new speeches since Monday",
+  "atlas_search_placeholder": "Find speeches on \"Migration\"…",
+
+  "sankey_eyebrow": "Topic flow · 1990 → today",
+  "sankey_title": "How topics grow, shrink, and shift across legislatures",
+  "sankey_hint": "Currently highlighted: Migration",
+  "sankey_mode_sankey": "Sankey",
+  "sankey_mode_stream": "Stream",
+
+  "positioning_eyebrow": "Speaker positioning",
+  "positioning_title": "Who sounds like a different faction?",
+  "positioning_hint": "Axis: AfD ↔ Grüne · Topic: All",
+  "positioning_detail": "Detail",
+
+  "scattertext_eyebrow": "Word comparison · Scattertext",
+  "scattertext_title": "What distinguishes AfD vs. Grüne?",
+  "scattertext_hint": "Click a word for example sentences",
+
+  "fingerprint_eyebrow": "Speaker fingerprint",
+  "fingerprint_title": "Rhetorical profiles at a glance",
+  "fingerprint_hint": "5 traits × 16 quarters (1990 → 2026) · 8 top speakers",
+  "fingerprint_add_speaker": "Speaker",
+
+  "glossary_style_vs_vote_lead": "Speaking style ≠ voting behavior.",
+  "glossary_style_vs_vote_body": "This view describes rhetorical similarity, not ideology and not voting record."
 }

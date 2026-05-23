@@ -1,9 +1,7 @@
-"use client";
-
+import { Link, useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { type MP, MPS } from "@/data/mps";
 import { PARTY } from "@/data/parties";
-import { Link } from "@/i18n/navigation";
 
 type Props = {
   width?: number;
@@ -33,6 +31,8 @@ const PALETTE = [
 export function FingerprintGrid({ width = 660, mps }: Props) {
   const list = mps ?? MPS.filter((m) => m.note !== "thin").slice(0, 8);
   const tile = { w: width / 4 - 8, h: 76 };
+  const params = useParams({ strict: false });
+  const locale = (params.locale as string | undefined) ?? "de";
 
   const data = useMemo(() => {
     const out: Record<string, number[][]> = {};
@@ -66,7 +66,8 @@ export function FingerprintGrid({ width = 660, mps }: Props) {
         return (
           <Link
             key={m.id}
-            href={`/abgeordnete/${m.id}`}
+            to="/$locale/abgeordnete/$id"
+            params={{ locale, id: m.id }}
             style={{
               background: "var(--panel-2)",
               borderRadius: 4,

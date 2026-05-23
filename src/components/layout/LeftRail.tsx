@@ -1,10 +1,8 @@
-"use client";
-
-import { useTranslations } from "next-intl";
 import { Icon } from "@/components/Icon";
 import { PartyDot } from "@/components/PartyDot";
 import { PARTIES, type PartyId } from "@/data/parties";
 import { PERIODS } from "@/data/periods";
+import * as m from "@/paraglide/messages";
 import { useFilters } from "@/state/filters";
 import { useUI } from "@/state/ui";
 
@@ -30,7 +28,6 @@ const SPEECH_COUNTS: Record<PartyId, string> = {
 };
 
 export function LeftRail() {
-  const t = useTranslations("LeftRail");
   const [filters, setFilters] = useFilters();
   const collapsed = useUI((s) => s.leftRailCollapsed);
   const toggle = useUI((s) => s.toggleLeftRail);
@@ -65,8 +62,8 @@ export function LeftRail() {
         <button
           type="button"
           onClick={toggle}
-          aria-label="Filter öffnen"
-          title="Filter öffnen"
+          aria-label={m.leftrail_open()}
+          title={m.leftrail_open()}
           style={{
             background: "transparent",
             border: "1px solid var(--hairline)",
@@ -104,8 +101,8 @@ export function LeftRail() {
       <button
         type="button"
         onClick={toggle}
-        aria-label="Filter schließen"
-        title="Filter schließen"
+        aria-label={m.leftrail_close()}
+        title={m.leftrail_close()}
         style={{
           position: "absolute",
           top: 14,
@@ -127,7 +124,7 @@ export function LeftRail() {
       </button>
 
       <div>
-        <h4 style={SECTION_HEAD}>{t("period")}</h4>
+        <h4 style={SECTION_HEAD}>{m.leftrail_period()}</h4>
         <div
           style={{
             display: "flex",
@@ -198,7 +195,7 @@ export function LeftRail() {
       </div>
 
       <div>
-        <h4 style={SECTION_HEAD}>{t("wahlperiode")}</h4>
+        <h4 style={SECTION_HEAD}>{m.leftrail_wahlperiode()}</h4>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
           {PERIODS.map((p) => {
             const on = filters.period === p.id;
@@ -227,7 +224,7 @@ export function LeftRail() {
       </div>
 
       <div>
-        <h4 style={SECTION_HEAD}>{t("factions")}</h4>
+        <h4 style={SECTION_HEAD}>{m.leftrail_factions()}</h4>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {PARTIES.map((p) => {
             const on = activeSet.has(p.id);
@@ -277,7 +274,7 @@ export function LeftRail() {
       </div>
 
       <div>
-        <h4 style={SECTION_HEAD}>{t("speaker")}</h4>
+        <h4 style={SECTION_HEAD}>{m.leftrail_speaker()}</h4>
         <div
           style={{
             display: "flex",
@@ -291,7 +288,7 @@ export function LeftRail() {
         >
           <Icon name="search" size={12} color="var(--muted)" />
           <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)" }}>
-            {t("addPerson")}
+            {m.leftrail_add_person()}
           </span>
         </div>
       </div>
@@ -303,7 +300,7 @@ export function LeftRail() {
         className="btn-ghost"
         style={{ alignSelf: "flex-start" }}
       >
-        <Icon name="reset" size={12} /> {t("resetFilters")}
+        <Icon name="reset" size={12} /> {m.leftrail_reset_filters()}
       </button>
     </aside>
   );

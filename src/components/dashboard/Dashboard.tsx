@@ -1,5 +1,4 @@
-"use client";
-
+import { Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { Icon } from "@/components/Icon";
 import { BottomStrip } from "@/components/layout/BottomStrip";
@@ -13,7 +12,6 @@ import { SankeyTimeline } from "@/components/viz/SankeyTimeline";
 import { Scattertext } from "@/components/viz/Scattertext";
 import { Sparkline } from "@/components/viz/Sparkline";
 import { MPS } from "@/data/mps";
-import { Link } from "@/i18n/navigation";
 import { useUI } from "@/state/ui";
 import { PanelHead } from "./PanelHead";
 
@@ -31,6 +29,8 @@ const HERO_SPEAKERS = [
 export function Dashboard() {
   const theme = useUI((s) => s.theme);
   const dark = theme === "dark";
+  const params = useParams({ strict: false });
+  const locale = (params.locale as string | undefined) ?? "de";
 
   const [hoveredId, setHoveredId] = useState<string | null>("oezdemir");
   const [hoveredW, setHoveredW] = useState<string | null>(null);
@@ -349,7 +349,8 @@ export function Dashboard() {
                 hint="Achse: AfD ↔ Grüne · Thema: Alle"
                 right={
                   <Link
-                    href="/positionierung"
+                    to="/$locale/positionierung"
+                    params={{ locale }}
                     className="btn-ghost"
                     style={{ textDecoration: "none" }}
                   >

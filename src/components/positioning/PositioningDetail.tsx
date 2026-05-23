@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { MaverickCard } from "@/components/dashboard/MaverickCard";
 import { GlossaryNote } from "@/components/GlossaryNote";

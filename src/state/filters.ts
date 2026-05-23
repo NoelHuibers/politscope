@@ -1,5 +1,3 @@
-"use client";
-
 import { parseAsArrayOf, parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { PARTIES, type PartyId } from "@/data/parties";
 

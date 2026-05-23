@@ -1,19 +1,18 @@
-"use client";
-
-import { useTranslations } from "next-intl";
+import { useNavigate, useParams, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { MethodologyModal } from "@/components/dashboard/MethodologyModal";
 import { Icon } from "@/components/Icon";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import * as m from "@/paraglide/messages";
 import { useUI } from "@/state/ui";
 
 export function TopBar() {
-  const t = useTranslations();
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const params = useParams({ strict: false });
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const theme = useUI((s) => s.theme);
   const setTheme = useUI((s) => s.setTheme);
   const [methodologyOpen, setMethodologyOpen] = useState(false);
+  const currentLocale = (params.locale as string | undefined) ?? "de";
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
@@ -22,7 +21,8 @@ export function TopBar() {
   };
 
   const switchLocale = (locale: "de" | "en") => {
-    router.replace(pathname, { locale });
+    const rest = pathname.replace(/^\/(de|en)/, "");
+    void navigate({ to: `/${locale}${rest}` as never, replace: true });
   };
 
   return (
@@ -48,7 +48,7 @@ export function TopBar() {
             color: "var(--ink)",
           }}
         >
-          {t("App.name")}
+          {m.app_name()}
         </span>
         <span
           style={{
@@ -59,7 +59,7 @@ export function TopBar() {
             textTransform: "uppercase",
           }}
         >
-          {t("App.tagline")}
+          {m.app_tagline()}
         </span>
       </div>
 
@@ -81,7 +81,7 @@ export function TopBar() {
         <span
           style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--ink-2)", flex: 1 }}
         >
-          {t("App.searchExample")}
+          {m.app_search_example()}
         </span>
         <span
           style={{
@@ -100,7 +100,7 @@ export function TopBar() {
       <div style={{ flex: 1 }} />
 
       <button type="button" className="btn-ghost" onClick={() => setMethodologyOpen(true)}>
-        <Icon name="methodology" size={12} /> {t("TopBar.methodology")}
+        <Icon name="methodology" size={12} /> {m.topbar_methodology()}
       </button>
       <MethodologyModal open={methodologyOpen} onOpenChange={setMethodologyOpen} />
 
@@ -125,10 +125,10 @@ export function TopBar() {
               fontFamily: "var(--font-mono)",
               fontSize: 10.5,
               fontWeight: 600,
-              background: "transparent",
+              background: l === currentLocale ? "var(--ink)" : "transparent",
               border: "none",
               cursor: "pointer",
-              color: "var(--muted)",
+              color: l === currentLocale ? "var(--bg)" : "var(--muted)",
               textTransform: "uppercase",
             }}
           >
@@ -138,11 +138,11 @@ export function TopBar() {
       </div>
 
       <button type="button" className="btn-ghost" onClick={toggleTheme}>
-        {theme === "dark" ? `☾ ${t("TopBar.themeDark")}` : `☀ ${t("TopBar.themeLight")}`}
+        {theme === "dark" ? `☾ ${m.topbar_theme_dark()}` : `☀ ${m.topbar_theme_light()}`}
       </button>
 
       <button type="button" className="btn-ghost">
-        <Icon name="download" size={12} /> {t("TopBar.share")}
+        <Icon name="download" size={12} /> {m.topbar_share()}
       </button>
     </div>
   );
