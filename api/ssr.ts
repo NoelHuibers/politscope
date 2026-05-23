@@ -7,9 +7,15 @@ export const config = {
 };
 
 export default async function handler(request: Request): Promise<Response> {
-  const { pathname } = new URL(request.url, "http://localhost");
-  if (pathname === "/api/health") {
+  const host =
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "localhost";
+  const proto = request.headers.get("x-forwarded-proto") ?? "https";
+  const base = `${proto}://${host}`;
+  const url = new URL(request.url, base);
+
+  if (url.pathname === "/api/health") {
     return health();
   }
-  return server.fetch(request);
+
+  return server.fetch(new Request(url.toString(), request));
 }
