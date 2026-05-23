@@ -21,6 +21,7 @@
     "vercel:dev": "vercel dev",
     "vercel:build": "vercel build",
     "ingest:bundestag": "tsx scripts/ingest-bundestag.ts",
+    "fetch:stammdaten": "tsx scripts/fetch-stammdaten.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
