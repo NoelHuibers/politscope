@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dbtplenarprotokoll wahlperiode="20" sitzung-nr="43" sitzung-datum="23.06.2022">
+  <sitzungsverlauf>
+    <tagesordnungspunkt top-id="TOP 1">
+      <rede id="ID2043100">
+        <p klasse="redner">
+          <redner id="11004500">
+            <name>
+              <vorname>Volker</vorname>
+              <nachname>Wissing</nachname>
+              <fraktion>FDP</fraktion>
+              <rolle>
+                <rolle_lang>Bundesminister für Digitales und Verkehr</rolle_lang>
+              </rolle>
+            </name>
+          </redner>
+        </p>
+        <p klasse="J">Ich freue mich, heute den Verkehrsbericht vorzustellen.</p>
+        <kommentar>(Heiterkeit bei der SPD)</kommentar>
+        <p klasse="J">Die Investitionen steigen erheblich.</p>
+      </rede>
+      <rede id="ID2043101">
+        <p klasse="redner">
+          <redner id="11003001">
+            <name>
+              <titel>Dr.</titel>
+              <vorname>Klaus</vorname>
+              <nachname>Schmidt</nachname>
+              <fraktion>CDU/CSU</fraktion>
+            </name>
+          </redner>
+        </p>
+        <p klasse="J">Herr Minister, die Investitionen reichen nicht aus.</p>
+      </rede>
+    </tagesordnungspunkt>
+    <tagesordnungspunkt top-id="TOP 2a">
+      <rede id="ID2043200">
+        <p klasse="redner">
+          <redner id="11003001">
+            <name>
+              <titel>Dr.</titel>
+              <vorname>Klaus</vorname>
+              <nachname>Schmidt</nachname>
+              <fraktion>CDU/CSU</fraktion>
+            </name>
+          </redner>
+        </p>
+        <p klasse="J">Zum zweiten Tagesordnungspunkt: Wir lehnen den Antrag ab.</p>
+      </rede>
+    </tagesordnungspunkt>
+  </sitzungsverlauf>
+</dbtplenarprotokoll>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dbtplenarprotokoll wahlperiode="20" sitzung-nr="42" sitzung-datum="22.06.2022">
+  <kopfdaten>
+    <plenarprotokoll-nummer>20/42</plenarprotokoll-nummer>
+  </kopfdaten>
+  <sitzungsverlauf>
+    <tagesordnungspunkt top-id="TOP 5">
+      <rede id="ID2042500">
+        <p klasse="redner">
+          <redner id="11003001">
+            <name>
+              <titel>Dr.</titel>
+              <vorname>Klaus</vorname>
+              <nachname>Schmidt</nachname>
+              <fraktion>CDU/CSU</fraktion>
+            </name>
+          </redner>
+          Dr. Klaus Schmidt (CDU/CSU):
+        </p>
+        <p klasse="J">Sehr geehrte Damen und Herren, ich möchte heute über Klimaschutz sprechen.</p>
+        <kommentar>(Beifall bei der CDU/CSU)</kommentar>
+        <p klasse="J">Das Thema ist wichtig für unsere Zukunft.</p>
+      </rede>
+    </tagesordnungspunkt>
+  </sitzungsverlauf>
+</dbtplenarprotokoll>
