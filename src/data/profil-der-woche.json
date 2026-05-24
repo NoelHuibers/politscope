@@ -1,26 +1,26 @@
 {
-  "generatedAt": "2026-05-24T12:50:24.275Z",
-  "extId": "11005089",
-  "name": "Verena Hubertz",
+  "generatedAt": "2026-05-24T20:13:56.046Z",
+  "extId": "11005142",
+  "name": "Dr. Dr. Zanda Grundberg",
   "party": "spd",
-  "role": "Bundesministerin für Wohnen, Stadtentwicklung und Bauwesen",
+  "role": null,
   "phrases": [
     {
-      "phrase": "nachfrage",
-      "weight": 7.657262215128828,
-      "count": 15
+      "phrase": "mieter",
+      "weight": 24.023113040592545,
+      "count": 31
     },
     {
-      "phrase": "wohnraum",
-      "weight": 5.955629988150694,
-      "count": 9
+      "phrase": "mieterinnen",
+      "weight": 17.238443338642107,
+      "count": 17
     },
     {
-      "phrase": "bauturbo",
-      "weight": 5.353512866060761,
-      "count": 8
+      "phrase": "mietpreisbremse",
+      "weight": 14.623990831579023,
+      "count": 11
     }
   ],
-  "reasonScore": 7.657262215128828,
-  "speechCount": 25
+  "reasonScore": 24.023113040592545,
+  "speechCount": 4
 }

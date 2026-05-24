@@ -1,15 +1,23 @@
 import { PERIODS } from "@/data/periods";
 import { TOPIC_FLOWS, TOPICS, type TopicId } from "@/data/topics";
 
+/** Real-data shape matching `TopicFlowsResponse` from src/lib/server/topic-flows.ts. */
+export type RealTopicFlows = {
+  periods: { id: number; label: string; total: number }[];
+  bands: { topicId: string; label: string; counts: number[]; total: number }[];
+};
+
 type Props = {
   width?: number;
   height?: number;
   dark?: boolean;
   mode?: "sankey" | "stream";
-  highlightTopicId?: TopicId | null;
+  highlightTopicId?: string | null;
+  /** When provided, renders real WP-share data instead of the mock TOPIC_FLOWS. */
+  realFlows?: RealTopicFlows | null;
 };
 
-const PALETTE: Record<TopicId, string> = {
+const MOCK_PALETTE: Record<TopicId, string> = {
   wirt: "var(--color-seq-2)",
   soz: "var(--color-seq-3)",
   auss: "var(--color-seq-5)",
@@ -26,12 +34,36 @@ const PALETTE: Record<TopicId, string> = {
   land: "#d8c98a",
 };
 
+/** Stable palette for real cluster-N IDs — same colors as the atlas legend. */
+const CLUSTER_COLORS = [
+  "var(--color-seq-1)",
+  "var(--color-seq-2)",
+  "var(--color-seq-3)",
+  "var(--color-seq-4)",
+  "var(--color-seq-5)",
+  "#4a8a2c",
+  "var(--accent)",
+  "#b1d3c7",
+  "#d6cfb8",
+  "#b3d8e8",
+];
+
+function clusterColor(topicId: string): string {
+  const m = /cluster-(\d+)/.exec(topicId);
+  const idx = m ? Number.parseInt(m[1] ?? "0", 10) : 0;
+  return CLUSTER_COLORS[idx % CLUSTER_COLORS.length] ?? CLUSTER_COLORS[0] ?? "var(--ink-2)";
+}
+
+type Band = { topicId: string; label: string; series: number[]; color: string };
+type PeriodCol = { id: string | number; label: string };
+
 export function SankeyTimeline({
   width = 660,
   height = 220,
   dark = false,
   mode = "sankey",
   highlightTopicId = null,
+  realFlows = null,
 }: Props) {
   const pad = { l: 10, r: 56, t: 10, b: 22 };
   const W = width;
@@ -39,37 +71,59 @@ export function SankeyTimeline({
   const innerW = W - pad.l - pad.r;
   const innerH = H - pad.t - pad.b;
 
-  const periods = PERIODS;
+  // Build a unified (Band[], Period[]) view that works for both real + mock.
+  let periods: PeriodCol[];
+  let bands: Band[];
+  if (realFlows && realFlows.bands.length > 0 && realFlows.periods.length > 0) {
+    periods = realFlows.periods.map((p) => ({ id: p.id, label: p.label }));
+    bands = realFlows.bands
+      .map((b) => ({
+        topicId: b.topicId,
+        label: b.label,
+        series: [...b.counts],
+        color: clusterColor(b.topicId),
+      }))
+      .sort((a, b) => {
+        const as = a.series.reduce((s, v) => s + v, 0);
+        const bs = b.series.reduce((s, v) => s + v, 0);
+        return bs - as;
+      });
+  } else {
+    periods = PERIODS.map((p) => ({ id: p.id, label: p.label }));
+    const mockTopicLabel = Object.fromEntries(TOPICS.map((t) => [t.id, t.label])) as Record<
+      TopicId,
+      string
+    >;
+    bands = (Object.keys(TOPIC_FLOWS) as TopicId[])
+      .map((tid) => ({
+        topicId: tid,
+        label: mockTopicLabel[tid] ?? tid,
+        series: [...TOPIC_FLOWS[tid]],
+        color: MOCK_PALETTE[tid],
+      }))
+      .sort((a, b) => {
+        const as = a.series.reduce((s, v) => s + v, 0);
+        const bs = b.series.reduce((s, v) => s + v, 0);
+        return bs - as;
+      });
+  }
+
   const nP = periods.length;
-  const xAt = (i: number) => pad.l + (i / (nP - 1)) * innerW;
+  const xAt = (i: number) => (nP === 1 ? pad.l + innerW / 2 : pad.l + (i / (nP - 1)) * innerW);
 
-  const topicIds = Object.keys(TOPIC_FLOWS) as TopicId[];
-  const ordered = topicIds.slice().sort((a, b) => {
-    const am = TOPIC_FLOWS[a].reduce((s, v) => s + v, 0);
-    const bm = TOPIC_FLOWS[b].reduce((s, v) => s + v, 0);
-    return bm - am;
-  });
-
-  const bands = ordered.map((tid) => ({ tid, series: TOPIC_FLOWS[tid] }));
-
-  const stackTop: { tid: TopicId; start: number; end: number }[][] = [];
+  const stackTop: { topicId: string; start: number; end: number }[][] = [];
   for (let i = 0; i < nP; i++) {
-    const total = bands.reduce((s, b) => s + (b.series[i] ?? 0), 0);
+    const total = bands.reduce((s, b) => s + (b.series[i] ?? 0), 0) || 1;
     let cum = 0;
     const row = bands.map((b) => {
       const start = cum;
       cum += b.series[i] ?? 0;
-      return { tid: b.tid, start: start / total, end: cum / total };
+      return { topicId: b.topicId, start: start / total, end: cum / total };
     });
     stackTop.push(row);
   }
 
-  const topicLabel = Object.fromEntries(TOPICS.map((t) => [t.id, t.label])) as Record<
-    TopicId,
-    string
-  >;
   const baseAlpha = dark ? 0.72 : 0.82;
-
   const yScale = (s: number) => pad.t + s * innerH;
 
   const curve = (x1: number, y1a: number, y1b: number, x2: number, y2a: number, y2b: number) => {
@@ -111,17 +165,17 @@ export function SankeyTimeline({
       {mode === "sankey" ? (
         <g>
           {bands.map((b) => {
-            const isHi = highlightTopicId === b.tid;
+            const isHi = highlightTopicId === b.topicId;
             const op = highlightTopicId ? (isHi ? 0.95 : 0.32) : baseAlpha;
             const lastRow = stackTop[nP - 1];
-            const last = lastRow?.find((s) => s.tid === b.tid);
+            const last = lastRow?.find((s) => s.topicId === b.topicId);
             const mid = last ? (last.start + last.end) / 2 : 0;
             const span = last ? last.end - last.start : 0;
             return (
-              <g key={b.tid}>
-                {Array.from({ length: nP - 1 }).map((_, i) => {
-                  const a = stackTop[i]?.find((s) => s.tid === b.tid);
-                  const c = stackTop[i + 1]?.find((s) => s.tid === b.tid);
+              <g key={b.topicId}>
+                {Array.from({ length: Math.max(0, nP - 1) }).map((_, i) => {
+                  const a = stackTop[i]?.find((s) => s.topicId === b.topicId);
+                  const c = stackTop[i + 1]?.find((s) => s.topicId === b.topicId);
                   if (!(a && c)) return null;
                   return (
                     <path
@@ -135,7 +189,7 @@ export function SankeyTimeline({
                         yScale(c.start),
                         yScale(c.end),
                       )}
-                      fill={PALETTE[b.tid]}
+                      fill={b.color}
                       opacity={op}
                     />
                   );
@@ -150,7 +204,7 @@ export function SankeyTimeline({
                     fill={isHi ? "var(--ink)" : "var(--ink-2)"}
                     opacity={highlightTopicId && !isHi ? 0.55 : 1}
                   >
-                    {topicLabel[b.tid]}
+                    {b.label}
                   </text>
                 )}
               </g>
@@ -160,10 +214,10 @@ export function SankeyTimeline({
       ) : (
         <g>
           {bands.map((b) => {
-            const isHi = highlightTopicId === b.tid;
+            const isHi = highlightTopicId === b.topicId;
             const op = highlightTopicId ? (isHi ? 0.95 : 0.32) : baseAlpha;
             const tops = stackTop.map((row, i) => {
-              const seg = row.find((s) => s.tid === b.tid) ?? { start: 0, end: 0 };
+              const seg = row.find((s) => s.topicId === b.topicId) ?? { start: 0, end: 0 };
               const center = 0.5;
               const half = (seg.end - seg.start) / 2;
               const cumTo = seg.start + (seg.end - seg.start) / 2 - 0.5;
@@ -178,7 +232,7 @@ export function SankeyTimeline({
               .reverse()
               .map((t) => `${t.x},${t.bot}`)
               .join(" L ")} Z`;
-            return <path key={b.tid} d={d} fill={PALETTE[b.tid]} opacity={op} />;
+            return <path key={b.topicId} d={d} fill={b.color} opacity={op} />;
           })}
         </g>
       )}

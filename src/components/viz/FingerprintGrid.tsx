@@ -1,24 +1,26 @@
 import { Link, useParams } from "@tanstack/react-router";
-import { useMemo } from "react";
 import { type MP, MPS } from "@/data/mps";
-import { PARTY } from "@/data/parties";
+import { PARTY, type PartyId } from "@/data/parties";
+import type { FingerprintMp, FingerprintResponse } from "@/lib/server/fingerprint";
 
 type Props = {
   width?: number;
   height?: number;
   dark?: boolean;
   mps?: readonly MP[];
+  /** When provided, renders real per-quarter features instead of mock noise. */
+  realData?: FingerprintResponse | null;
+  /** Number of columns in the grid. Default 4. Use 1 for single-MP profile view. */
+  columns?: number;
 };
 
 const FEATURES = [
-  "Satzlänge",
-  "Lex. Reichtum",
-  "Sentiment",
-  "Formalität",
-  "Partei-Abweichung",
+  { key: "sentenceLen", label: "Satzlänge" },
+  { key: "ttr", label: "Lex. Reichtum" },
+  { key: "emotion", label: "Emotionalität" },
+  { key: "formality", label: "Formalität" },
+  { key: "deviation", label: "Partei-Abweichung" },
 ] as const;
-
-const PERIODS_QUARTERS = 16;
 
 const PALETTE = [
   "var(--color-seq-1)",
@@ -28,46 +30,99 @@ const PALETTE = [
   "var(--accent)",
 ];
 
-export function FingerprintGrid({ width = 660, mps }: Props) {
-  const list = mps ?? MPS.filter((m) => m.note !== "thin").slice(0, 8);
-  const tile = { w: width / 4 - 8, h: 76 };
+type FeatureKey = (typeof FEATURES)[number]["key"];
+
+type Row = {
+  id: string;
+  name: string;
+  party: PartyId;
+  /** features × quarters; 0-1 cells, `null` when MP didn't speak in that quarter. */
+  cells: (number | null)[][];
+  axis: string[];
+};
+
+function pseudoRandomCells(mi: number): (number | null)[][] {
+  const PERIODS_QUARTERS = 16;
+  return FEATURES.map((_, fi) => {
+    const arr: (number | null)[] = [];
+    let v = 0.5;
+    for (let i = 0; i < PERIODS_QUARTERS; i++) {
+      const seed = (mi * 17 + fi * 31 + i * 7) % 233;
+      v = Math.max(0.05, Math.min(0.95, v + ((seed % 100) / 100 - 0.5) * 0.18));
+      arr.push(v);
+    }
+    return arr;
+  });
+}
+
+function realCellsFor(
+  mp: FingerprintMp,
+  axis: string[],
+): { cells: (number | null)[][]; rangeLabel: string } {
+  // For each feature, build an array aligned with the global quarter axis.
+  // Quarters where the MP didn't speak are `null` (rendered as empty).
+  const byQ = new Map(mp.quarters.map((q) => [q.q, q]));
+  const cells = FEATURES.map(({ key }) => {
+    const k = key as FeatureKey;
+    return axis.map((q) => byQ.get(q)?.features[k] ?? null);
+  });
+  const first = mp.quarters[0]?.q;
+  const last = mp.quarters[mp.quarters.length - 1]?.q;
+  const rangeLabel = first && last ? `${first} → ${last}` : "";
+  return { cells, rangeLabel };
+}
+
+export function FingerprintGrid({ width = 660, mps, realData = null, columns = 4 }: Props) {
   const params = useParams({ strict: false });
   const locale = (params.locale as string | undefined) ?? "de";
 
-  const data = useMemo(() => {
-    const out: Record<string, number[][]> = {};
-    list.forEach((m, mi) => {
-      out[m.id] = FEATURES.map((_, fi) => {
-        const arr: number[] = [];
-        let v = 0.5;
-        for (let i = 0; i < PERIODS_QUARTERS; i++) {
-          const seed = (mi * 17 + fi * 31 + i * 7) % 233;
-          v = Math.max(0.05, Math.min(0.95, v + ((seed % 100) / 100 - 0.5) * 0.18));
-          arr.push(v);
-        }
-        return arr;
-      });
-    });
-    return out;
-  }, [list]);
+  // Decide what to render. Real data uses ext-ids; mock uses MP.id slugs.
+  const useReal = realData !== null && realData.mps.length > 0;
+  const list: readonly MP[] = useReal
+    ? []
+    : (mps ?? MPS.filter((m) => m.note !== "thin").slice(0, 8));
+
+  const rows: Row[] = useReal
+    ? realData.mps.map((m) => {
+        const { cells } = realCellsFor(m, realData.axis);
+        return {
+          id: m.extId,
+          name: m.name,
+          party: m.party as PartyId,
+          cells,
+          axis: realData.axis,
+        };
+      })
+    : list.map((m, i) => ({
+        id: m.id,
+        name: m.name,
+        party: m.party,
+        cells: pseudoRandomCells(i),
+        axis: Array.from({ length: 16 }).map((_, k) => `Q${k + 1}`),
+      }));
+
+  const tile = { w: width / columns - 8, h: columns === 1 ? 160 : 76 };
 
   return (
     <div
       style={{
         width: "100%",
         display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
         gap: 12,
       }}
     >
-      {list.map((m) => {
-        const party = PARTY[m.party];
-        const rows = data[m.id] ?? [];
+      {rows.map((r) => {
+        const party = PARTY[r.party];
+        const cellsW = Math.max(r.axis.length, 1);
+        const first = r.axis[0] ?? "";
+        const last = r.axis[r.axis.length - 1] ?? "";
+        const rangeLabel = first && last ? `${first} → ${last}` : "";
         return (
           <Link
-            key={m.id}
+            key={r.id}
             to="/$locale/abgeordnete/$id"
-            params={{ locale, id: m.id }}
+            params={{ locale, id: r.id }}
             style={{
               background: "var(--panel-2)",
               borderRadius: 4,
@@ -80,21 +135,14 @@ export function FingerprintGrid({ width = 660, mps }: Props) {
               transition: "border-color 120ms ease-out",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                marginBottom: 5,
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
               <span
                 style={{
                   width: 8,
                   height: 8,
                   borderRadius: party.shape === "square" ? 1 : "50%",
                   background: party.colorVar,
-                  border: m.party === "cdu" ? `1px solid ${party.ringVar ?? "transparent"}` : "0",
+                  border: r.party === "cdu" ? `1px solid ${party.ringVar ?? "transparent"}` : "0",
                 }}
               />
               <span
@@ -105,7 +153,7 @@ export function FingerprintGrid({ width = 660, mps }: Props) {
                   color: "var(--ink)",
                 }}
               >
-                {m.name}
+                {r.name}
               </span>
             </div>
             <svg
@@ -115,40 +163,33 @@ export function FingerprintGrid({ width = 660, mps }: Props) {
               preserveAspectRatio="none"
               aria-hidden="true"
             >
-              {FEATURES.map((_, fi) => {
+              {FEATURES.map((feat, fi) => {
                 const rowH = tile.h / FEATURES.length;
-                const cellW = tile.w / PERIODS_QUARTERS;
-                const row = rows[fi] ?? [];
+                const cellW = tile.w / cellsW;
+                const row = r.cells[fi] ?? [];
                 return (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: feature index is stable
-                  <g key={fi}>
-                    {row.map((v, i) => (
-                      <rect
-                        // biome-ignore lint/suspicious/noArrayIndexKey: quarter index is stable
-                        key={i}
-                        x={i * cellW}
-                        y={fi * rowH}
-                        width={cellW - 0.4}
-                        height={rowH - 0.6}
-                        fill={PALETTE[fi % PALETTE.length]}
-                        opacity={0.18 + v * 0.78}
-                      />
-                    ))}
+                  <g key={feat.key}>
+                    {row.map((v, i) =>
+                      v === null ? null : (
+                        <rect
+                          key={`${feat.key}-${r.axis[i] ?? i}`}
+                          x={i * cellW}
+                          y={fi * rowH}
+                          width={cellW - 0.4}
+                          height={rowH - 0.6}
+                          fill={PALETTE[fi % PALETTE.length]}
+                          opacity={0.18 + v * 0.78}
+                        />
+                      ),
+                    )}
                   </g>
                 );
               })}
             </svg>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-                marginTop: 4,
-              }}
-            >
+            <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 4 }}>
               {FEATURES.map((f, i) => (
                 <div
-                  key={f}
+                  key={f.key}
                   style={{
                     fontFamily: "var(--font-mono)",
                     fontSize: 8.5,
@@ -158,8 +199,8 @@ export function FingerprintGrid({ width = 660, mps }: Props) {
                     justifyContent: "space-between",
                   }}
                 >
-                  <span>{f}</span>
-                  <span>{i === FEATURES.length - 1 ? "Q1 90 → Q1 26" : ""}</span>
+                  <span>{f.label}</span>
+                  <span>{i === FEATURES.length - 1 ? rangeLabel : ""}</span>
                 </div>
               ))}
             </div>

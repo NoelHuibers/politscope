@@ -67,3 +67,6 @@ Thumbs.db
 # Large fixture files — download via pnpm fetch-stammdaten
 src/lib/ingest/bundestag-stammdaten/__fixtures__/real/MDB_STAMMDATEN.XML
 src/lib/ingest/bundestag-stammdaten/__fixtures__/real/MDB_STAMMDATEN.DTD
+
+# Demo seed corpus — re-fetch via pnpm tsx scripts/fetch-seed-corpus.ts
+/.cache/

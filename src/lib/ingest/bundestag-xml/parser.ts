@@ -120,7 +120,7 @@ function pickRoot(doc: unknown, source: string): XmlNode {
   if (!doc || typeof doc !== "object") {
     throw new MalformedXmlError("document is not an object", source);
   }
-  const rootKey = Object.keys(doc as object).find((k) => k !== "?xml" && k !== "#text");
+  const rootKey = Object.keys(doc as object).find((k) => !k.startsWith("?") && k !== "#text");
   if (!rootKey) throw new MalformedXmlError("no root element", source);
   if (rootKey !== "dbtplenarprotokoll") {
     throw new InvalidRootElementError(rootKey, source);

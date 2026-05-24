@@ -5,10 +5,12 @@ import { LeftRail } from "@/components/layout/LeftRail";
 import { TopBar } from "@/components/layout/TopBar";
 import { PartyDot } from "@/components/PartyDot";
 import { SpeechListItem } from "@/components/SpeechListItem";
+import { FingerprintGrid } from "@/components/viz/FingerprintGrid";
 import { type MP, MPS } from "@/data/mps";
 import { PARTY, type PartyId } from "@/data/parties";
 import { getSpeechesByMp, type MpProfile as MpProfileData } from "@/lib/server/directory";
 import { getMpDistinctivePhrases } from "@/lib/server/distinctive";
+import { getMpFingerprints } from "@/lib/server/fingerprint";
 import { useUI } from "@/state/ui";
 import { InsufficientDataFrame } from "./InsufficientDataFrame";
 import { ProfileSection } from "./ProfileSection";
@@ -134,6 +136,14 @@ export function MPProfile({ mpId, realProfile = null }: Props) {
     queryFn: () => {
       if (!realExtId) throw new Error("no extId");
       return getMpDistinctivePhrases({ data: realExtId });
+    },
+    enabled: realExtId !== null,
+  });
+  const fingerprintQuery = useQuery({
+    queryKey: ["mp-fingerprint", realExtId],
+    queryFn: () => {
+      if (!realExtId) throw new Error("no extId");
+      return getMpFingerprints({ data: { topN: 1, extId: realExtId } });
     },
     enabled: realExtId !== null,
   });
@@ -330,6 +340,21 @@ export function MPProfile({ mpId, realProfile = null }: Props) {
                 )}
               </ProfileSection>
             )}
+
+            {realExtId &&
+              fingerprintQuery.data &&
+              fingerprintQuery.data.mps.length > 0 &&
+              fingerprintQuery.data.mps[0] &&
+              fingerprintQuery.data.mps[0].quarters.length >= 2 && (
+                <ProfileSection
+                  title="Sprachprofil"
+                  eyebrow={`5 Merkmale × ${fingerprintQuery.data.mps[0].quarters.length} Quartale`}
+                  hint="Heatmap: pro Quartal Satzlänge, Lexikon, Emotionalität, Formalität und Abweichung von der eigenen Fraktion."
+                  ki
+                >
+                  <FingerprintGrid width={660} realData={fingerprintQuery.data} columns={1} />
+                </ProfileSection>
+              )}
 
             {realExtId && (
               <InsufficientDataFrame

@@ -18,6 +18,7 @@ import { formatGerman, useCorpusStats } from "@/lib/hooks/useCorpusStats";
 import { getAtlasPoints } from "@/lib/server/atlas";
 import { getPositioning } from "@/lib/server/positioning";
 import { getScattertext } from "@/lib/server/scattertext";
+import { getTopicFlows } from "@/lib/server/topic-flows";
 import { useFilters } from "@/state/filters";
 import { useUI } from "@/state/ui";
 import { PanelHead } from "./PanelHead";
@@ -64,6 +65,11 @@ export function Dashboard() {
     queryKey: ["scattertext", topicFilter, "afd", "grn"],
     queryFn: () =>
       getScattertext({ data: { topic: topicFilter ?? null, partyA: "afd", partyB: "grn" } }),
+  });
+
+  const topicFlowsQuery = useQuery({
+    queryKey: ["topic-flows"],
+    queryFn: () => getTopicFlows(),
   });
 
   /** Click a party in the legend → toggle it in the LeftRail party filter. */
@@ -415,7 +421,8 @@ export function Dashboard() {
                 height={210}
                 dark={dark}
                 mode={sankeyMode}
-                highlightTopicId="mig"
+                highlightTopicId={topicFilter}
+                realFlows={topicFlowsQuery.data ?? null}
               />
             </div>
           </div>
