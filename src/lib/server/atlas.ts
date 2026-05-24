@@ -51,6 +51,8 @@ export type AtlasFilters = {
   parties?: string[];
   /** Restrict to this Wahlperiode. undefined = all Wahlperioden. */
   wahlperiode?: number;
+  /** Restrict to one cluster (e.g. "cluster-3"). undefined = all topics. */
+  topic?: string;
 };
 
 /**
@@ -65,7 +67,7 @@ export const getAtlasPoints = createServerFn({ method: "GET" })
   .inputValidator((input: unknown): AtlasFilters => {
     if (input === null || input === undefined) return {};
     if (typeof input !== "object") return {};
-    const obj = input as { parties?: unknown; wahlperiode?: unknown };
+    const obj = input as { parties?: unknown; wahlperiode?: unknown; topic?: unknown };
     // `parties === undefined` means "no party filter"; `parties === []` means
     // "filter to no parties → expect zero results". Preserve the distinction.
     const parties =
@@ -76,7 +78,8 @@ export const getAtlasPoints = createServerFn({ method: "GET" })
       typeof obj.wahlperiode === "number" && Number.isFinite(obj.wahlperiode)
         ? Math.floor(obj.wahlperiode)
         : undefined;
-    return { parties, wahlperiode };
+    const topic = typeof obj.topic === "string" && obj.topic.length > 0 ? obj.topic : undefined;
+    return { parties, wahlperiode, topic };
   })
   .handler(async ({ data }): Promise<AtlasResponse> => {
     // parties === undefined → no filter; parties === [] → match nothing; parties === [...] → match those.
@@ -84,6 +87,7 @@ export const getAtlasPoints = createServerFn({ method: "GET" })
       data.parties === undefined ? sql`` : sql`AND m.party::text = ANY(${data.parties}::text[])`;
     const wpFilterSql =
       data.wahlperiode === undefined ? sql`` : sql`AND se.wahlperiode = ${data.wahlperiode}`;
+    const topicFilterSql = data.topic === undefined ? sql`` : sql`AND s.topic_id = ${data.topic}`;
 
     const projected = await db.execute<{
       id: string;
@@ -102,6 +106,7 @@ export const getAtlasPoints = createServerFn({ method: "GET" })
       WHERE s.umap_x IS NOT NULL AND s.umap_y IS NOT NULL AND m.party IS NOT NULL
       ${partyFilterSql}
       ${wpFilterSql}
+      ${topicFilterSql}
     `);
 
     const totalResult = await db.execute<{ count: string }>(

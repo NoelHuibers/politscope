@@ -41,7 +41,7 @@ export function Dashboard() {
 
   const [hoveredId, setHoveredId] = useState<string | null>("oezdemir");
 
-  const [filters] = useFilters();
+  const [filters, setFilters] = useFilters();
   // Filter semantics:
   // - parties === ALL → send undefined (= no filter, skip WHERE)
   // - parties === [] → send [] (= match nothing, expected to return zero rows)
@@ -49,12 +49,32 @@ export function Dashboard() {
   const partyFilter =
     filters.parties.length === ALL_PARTY_IDS.length ? undefined : [...filters.parties].sort();
   const wpFilter = filters.period;
+  const topicFilter = filters.topic;
 
   const atlasQuery = useQuery({
-    queryKey: ["atlas-points", partyFilter ?? "ALL", wpFilter],
+    queryKey: ["atlas-points", partyFilter ?? "ALL", wpFilter, topicFilter],
     queryFn: () =>
-      getAtlasPoints({ data: { parties: partyFilter, wahlperiode: wpFilter ?? undefined } }),
+      getAtlasPoints({
+        data: {
+          parties: partyFilter,
+          wahlperiode: wpFilter ?? undefined,
+          topic: topicFilter ?? undefined,
+        },
+      }),
   });
+
+  /** Click a party in the legend → toggle it in the LeftRail party filter. */
+  const togglePartyFilter = (partyId: string) => {
+    const active = new Set(filters.parties);
+    if (active.has(partyId)) active.delete(partyId);
+    else active.add(partyId);
+    setFilters({ parties: Array.from(active) });
+  };
+
+  /** Click a cluster label → set the topic filter (or clear if same cluster clicked twice). */
+  const toggleTopicFilter = (topicId: string) => {
+    setFilters({ topic: filters.topic === topicId ? null : topicId });
+  };
   const statsQuery = useCorpusStats();
   const openSpeechInspector = useUI((s) => s.openSpeechInspector);
   const totalSpeechesLabel = formatGerman(statsQuery.data?.totalSpeeches);
@@ -192,7 +212,11 @@ export function Dashboard() {
                   newThisWeekCount={statsQuery.data?.newThisWeek ?? 0}
                   realPoints={atlasQuery.data?.points ?? null}
                   realClusters={atlasQuery.data?.clusters ?? null}
+                  activeTopicId={topicFilter}
+                  activePartyIds={partyFilter}
                   onPointClick={openSpeechInspector}
+                  onClusterClick={toggleTopicFilter}
+                  onLegendPartyClick={togglePartyFilter}
                 />
                 {atlasQuery.data && atlasQuery.data.projected === 0 && (
                   <div

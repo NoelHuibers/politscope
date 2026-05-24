@@ -37,8 +37,16 @@ type Props = {
   realPoints?: AtlasRealPoint[] | null;
   /** Real cluster centroids + top keywords from #51 k-means. */
   realClusters?: AtlasRealCluster[] | null;
+  /** Currently active topic filter (from nuqs); cluster label renders highlighted when matched. */
+  activeTopicId?: string | null;
+  /** Active party filter — only legend rows in this list show as selected. undefined = all selected. */
+  activePartyIds?: string[];
   /** Fired when a real point is clicked. */
   onPointClick?: (id: string) => void;
+  /** Click on a cluster label — toggles topic filter. */
+  onClusterClick?: (topicId: string) => void;
+  /** Click on a legend party row — toggles party in filter. */
+  onLegendPartyClick?: (partyId: string) => void;
 };
 
 type Point = {
@@ -63,7 +71,11 @@ export function EmbeddingMap({
   newThisWeekCount = 0,
   realPoints = null,
   realClusters = null,
+  activeTopicId = null,
+  activePartyIds,
   onPointClick,
+  onClusterClick,
+  onLegendPartyClick,
 }: Props) {
   const formattedNew = newThisWeekCount.toLocaleString("de-DE").replace(/\./g, " ");
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -258,22 +270,32 @@ export function EmbeddingMap({
           })}
 
         {/* Real cluster labels — placed at the computed centroid of each topic.
-            Only render clusters with at least 3 keywords (skip incomplete ones). */}
+            Clickable to toggle the topic filter. */}
         {showRealData &&
           realClusters?.map((c) => {
             if (c.keywords.length === 0) return null;
             const label = c.keywords.slice(0, 2).join(" · ");
             const fontSize = 11 + Math.min(4, c.size / 10);
+            const isActive = activeTopicId === c.topicId;
+            const labelFill = isActive ? "var(--accent)" : labelColor;
+            const clickable = onClusterClick !== undefined;
             return (
-              <g key={c.topicId} style={{ pointerEvents: "none" }}>
+              <g
+                key={c.topicId}
+                onClick={clickable ? () => onClusterClick?.(c.topicId) : undefined}
+                style={{
+                  cursor: clickable ? "pointer" : "default",
+                  pointerEvents: clickable ? "auto" : "none",
+                }}
+              >
                 <text
                   x={X(c.cx)}
                   y={Y(c.cy)}
                   textAnchor="middle"
                   fontFamily="var(--font-sans)"
                   fontSize={fontSize}
-                  fontWeight={600}
-                  fill={labelColor}
+                  fontWeight={isActive ? 700 : 600}
+                  fill={labelFill}
                   stroke="var(--map-bg)"
                   strokeWidth={3.5}
                   paintOrder="stroke"
@@ -286,7 +308,7 @@ export function EmbeddingMap({
                   textAnchor="middle"
                   fontFamily="var(--font-mono)"
                   fontSize={9}
-                  fill={labelMuted}
+                  fill={isActive ? "var(--accent)" : labelMuted}
                   stroke="var(--map-bg)"
                   strokeWidth={3}
                   paintOrder="stroke"
@@ -333,8 +355,8 @@ export function EmbeddingMap({
             left: 12,
             display: "flex",
             flexDirection: "column",
-            gap: 4,
-            padding: "8px 10px",
+            gap: 2,
+            padding: "6px",
             background: "var(--panel)",
             border: "1px solid var(--hairline)",
             borderRadius: 6,
@@ -342,34 +364,64 @@ export function EmbeddingMap({
             fontFamily: "var(--font-sans)",
             fontSize: 10.5,
             zIndex: 1,
+            minWidth: 150,
           }}
         >
-          {legend.map((p) => (
-            <div
-              key={p.id}
-              style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--ink-2)" }}
-            >
-              <span
+          {legend.map((p) => {
+            const isActive = activePartyIds === undefined || activePartyIds.includes(p.id);
+            const clickable = onLegendPartyClick !== undefined;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                disabled={!clickable}
+                onClick={clickable ? () => onLegendPartyClick?.(p.id) : undefined}
                 style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: p.def.colorVar,
-                  display: "inline-block",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "4px 6px",
+                  borderRadius: 3,
+                  background: "transparent",
+                  border: "none",
+                  cursor: clickable ? "pointer" : "default",
+                  color: "var(--ink-2)",
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 10.5,
+                  opacity: isActive ? 1 : 0.4,
+                  textAlign: "left",
+                  transition: "opacity 0.12s ease, background 0.12s ease",
                 }}
-              />
-              <span style={{ fontWeight: 600, color: p.def.colorVar }}>{p.def.name}</span>
-              <span
-                style={{
-                  color: "var(--muted)",
-                  marginLeft: "auto",
-                  fontVariantNumeric: "tabular-nums",
+                onMouseEnter={(e) => {
+                  if (clickable) e.currentTarget.style.background = "var(--bg-2)";
+                }}
+                onMouseLeave={(e) => {
+                  if (clickable) e.currentTarget.style.background = "transparent";
                 }}
               >
-                {p.count}
-              </span>
-            </div>
-          ))}
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: p.def.colorVar,
+                    display: "inline-block",
+                    flexShrink: 0,
+                  }}
+                />
+                <span style={{ fontWeight: 600, color: p.def.colorVar }}>{p.def.name}</span>
+                <span
+                  style={{
+                    color: "var(--muted)",
+                    marginLeft: "auto",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {p.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
