@@ -28,13 +28,13 @@ export function TopBar() {
   return (
     <div
       style={{
-        height: 56,
+        height: 44,
         display: "flex",
         alignItems: "center",
-        padding: "0 22px",
+        padding: "0 18px",
         background: "var(--panel)",
         borderBottom: "1px solid var(--hairline)",
-        gap: 18,
+        gap: 14,
         flex: "0 0 auto",
       }}
     >
@@ -52,7 +52,7 @@ export function TopBar() {
           style={{
             fontFamily: "var(--font-serif)",
             fontWeight: 500,
-            fontSize: 22,
+            fontSize: 18,
             letterSpacing: "-0.01em",
             color: "var(--ink)",
           }}
@@ -85,8 +85,8 @@ export function TopBar() {
           background: "var(--bg-2)",
           border: "1px solid var(--hairline)",
           borderRadius: 6,
-          padding: "0 12px",
-          height: 34,
+          padding: "0 10px",
+          height: 28,
           cursor: "pointer",
           fontFamily: "var(--font-sans)",
           color: "var(--ink-2)",
@@ -145,7 +145,7 @@ export function TopBar() {
           border: "1px solid var(--hairline)",
           borderRadius: 6,
           overflow: "hidden",
-          height: 28,
+          height: 24,
         }}
       >
         {(["de", "en"] as const).map((l) => (

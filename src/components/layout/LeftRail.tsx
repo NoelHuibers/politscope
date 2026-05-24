@@ -15,12 +15,12 @@ function compactCount(n: number | undefined): string {
 
 const SECTION_HEAD: React.CSSProperties = {
   fontFamily: "var(--font-sans)",
-  fontSize: 10.5,
+  fontSize: 9.5,
   fontWeight: 600,
-  letterSpacing: "0.12em",
+  letterSpacing: "0.1em",
   textTransform: "uppercase",
   color: "var(--muted)",
-  margin: "0 0 10px",
+  margin: "0 0 6px",
 };
 
 /** "2026-05-20" → "Q2 2026"; null → fallback string */
@@ -101,14 +101,14 @@ export function LeftRail() {
   return (
     <aside
       style={{
-        width: 232,
-        flex: "0 0 232px",
+        width: 184,
+        flex: "0 0 184px",
         background: "var(--panel)",
         borderRight: "1px solid var(--hairline)",
-        padding: "20px 18px 16px",
+        padding: "14px 14px 12px",
         display: "flex",
         flexDirection: "column",
-        gap: 22,
+        gap: 14,
         overflow: "hidden",
         position: "relative",
       }}
@@ -192,7 +192,7 @@ export function LeftRail() {
 
       <div>
         <h4 style={SECTION_HEAD}>{m.leftrail_factions()}</h4>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {PARTIES.map((p) => {
             const on = activeSet.has(p.id);
             return (
@@ -204,21 +204,21 @@ export function LeftRail() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 9,
-                  padding: "6px 8px",
-                  borderRadius: 5,
+                  gap: 7,
+                  padding: "3px 6px",
+                  borderRadius: 4,
                   cursor: "pointer",
                   background: on ? "var(--bg-2)" : "transparent",
                   border: `1px solid ${on ? "var(--hairline)" : "transparent"}`,
                   textAlign: "left",
                 }}
               >
-                <PartyDot id={p.id} size={9} />
+                <PartyDot id={p.id} size={8} />
                 <span
                   style={{
                     flex: 1,
                     fontFamily: "var(--font-sans)",
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: 500,
                     color: on ? "var(--ink)" : "var(--ink-2)",
                   }}
@@ -228,7 +228,7 @@ export function LeftRail() {
                 <span
                   style={{
                     fontFamily: "var(--font-mono)",
-                    fontSize: 10,
+                    fontSize: 9.5,
                     color: "var(--muted)",
                   }}
                 >

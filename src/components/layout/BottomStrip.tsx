@@ -34,51 +34,62 @@ export function BottomStrip() {
   return (
     <div
       style={{
-        height: 64,
-        flex: "0 0 64px",
+        height: 44,
+        flex: "0 0 44px",
         background: "var(--panel)",
         borderTop: "1px solid var(--hairline)",
-        padding: "0 22px",
+        padding: "0 18px",
         display: "grid",
-        gridTemplateColumns: "260px 1fr 220px",
+        gridTemplateColumns: "220px 1fr 200px",
         alignItems: "center",
-        gap: 24,
+        gap: 18,
       }}
     >
-      <div>
-        <div
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontSize: 11,
-            color: "var(--muted)",
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-            fontWeight: 600,
-          }}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
+        <span
+          className="t-eyebrow"
+          style={{ color: "var(--muted)", fontSize: 10, whiteSpace: "nowrap" }}
         >
           {m.bottom_as_of()}
-        </div>
-        <div
+        </span>
+        <span
           style={{
             fontFamily: "var(--font-serif)",
-            fontSize: 16,
+            fontSize: 13,
             fontWeight: 500,
             color: "var(--ink)",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           {germanLongDate(stats.data?.latestDate)}
-          <span
-            className="pulse"
-            style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)" }}
-          />
-        </div>
+        </span>
+        <span
+          className="pulse"
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: "var(--accent)",
+            flex: "0 0 6px",
+          }}
+        />
       </div>
 
-      <div style={{ display: "flex", gap: 16, overflow: "hidden", justifyContent: "center" }}>
-        <span className="t-eyebrow" style={{ alignSelf: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 14,
+          overflow: "hidden",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <span
+          className="t-eyebrow"
+          style={{ fontSize: 10, color: "var(--muted)", whiteSpace: "nowrap" }}
+        >
           {m.bottom_recent_sessions()}
         </span>
         {(recent.data ?? []).map((s) => (
@@ -88,40 +99,48 @@ export function BottomStrip() {
             params={{ locale: "de", wp: String(s.wahlperiode), nr: String(s.sitzung) }}
             style={{
               display: "flex",
-              flexDirection: "column",
-              gap: 2,
+              alignItems: "baseline",
+              gap: 6,
               minWidth: 0,
               textDecoration: "none",
               color: "inherit",
+              fontFamily: "var(--font-sans)",
+              fontSize: 11,
             }}
           >
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--muted)" }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--muted)" }}>
               {germanShortDate(s.date)}
-            </div>
-            <div
+            </span>
+            <span
               style={{
-                fontFamily: "var(--font-sans)",
-                fontSize: 11.5,
                 fontWeight: 500,
                 color: "var(--ink-2)",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                maxWidth: 200,
               }}
             >
-              WP{s.wahlperiode} · Sitzung {s.sitzung} · {s.speechCount} Reden
-            </div>
+              WP{s.wahlperiode}·{s.sitzung}
+            </span>
           </Link>
         ))}
       </div>
 
-      <div style={{ textAlign: "right" }}>
-        <div className="t-eyebrow">{m.bottom_data_source()}</div>
-        <div style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, color: "var(--ink-2)" }}>
-          bundestag.de · täglich ·{" "}
-          <span style={{ color: "var(--accent)" }}>{m.bottom_active()}</span>
-        </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: 6,
+          justifyContent: "flex-end",
+          fontFamily: "var(--font-sans)",
+          fontSize: 11,
+        }}
+      >
+        <span className="t-eyebrow" style={{ fontSize: 10, color: "var(--muted)" }}>
+          {m.bottom_data_source()}
+        </span>
+        <span style={{ color: "var(--ink-2)" }}>bundestag.de</span>
+        <span style={{ color: "var(--accent)" }}>· {m.bottom_active()}</span>
       </div>
     </div>
   );

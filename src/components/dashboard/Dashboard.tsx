@@ -114,12 +114,13 @@ export function Dashboard() {
           style={{
             flex: 1,
             display: "grid",
-            gridTemplateColumns: "1.05fr 1fr",
-            gridTemplateRows: "minmax(190px, auto) minmax(220px, 1fr) minmax(190px, auto)",
+            gridTemplateColumns: "1.1fr 1fr",
+            gridTemplateRows: "minmax(160px, 200px) 1fr 110px",
             gap: 1,
             background: "var(--hairline)",
             padding: 1,
             minWidth: 0,
+            minHeight: 0,
           }}
         >
           {/* Atlas — full-height left */}
@@ -335,11 +336,17 @@ export function Dashboard() {
               }
             />
             <div
-              style={{ flex: 1, padding: "8px 14px 12px", display: "flex", alignItems: "stretch" }}
+              style={{
+                flex: 1,
+                padding: "4px 12px 8px",
+                display: "flex",
+                alignItems: "stretch",
+                minHeight: 0,
+              }}
             >
               <SankeyTimeline
                 width={640}
-                height={210}
+                height={160}
                 dark={dark}
                 mode={sankeyMode}
                 highlightTopicId={topicFilter}
