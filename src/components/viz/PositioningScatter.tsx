@@ -4,6 +4,17 @@ import { PartyDotSvg } from "./PartyDotSvg";
 
 const noop = (_id: string | null): void => undefined;
 
+/** Real positioning point — matches `PositioningMp` in src/lib/server/positioning.ts. */
+export type PositioningPoint = {
+  extId: string;
+  name: string;
+  party: string;
+  ax: number;
+  ay: number;
+  n: number;
+  isOutlier: boolean;
+};
+
 type Props = {
   width?: number;
   height?: number;
@@ -13,6 +24,17 @@ type Props = {
   topic?: string;
   hoveredId?: string | null;
   onHover?: (id: string | null) => void;
+  /** When provided, renders real MPs instead of the mock MPS. */
+  realMps?: PositioningPoint[] | null;
+};
+
+type MpRow = {
+  id: string;
+  name: string;
+  party: PartyId;
+  ax: number;
+  ay: number;
+  isOutlier: boolean;
 };
 
 export function PositioningScatter({
@@ -24,6 +46,7 @@ export function PositioningScatter({
   topic = "Alle Themen",
   hoveredId = null,
   onHover,
+  realMps = null,
 }: Props) {
   const handleHover = onHover ?? noop;
   const pad = { l: 36, r: 12, t: 22, b: 28 };
@@ -38,7 +61,23 @@ export function PositioningScatter({
   const B = PARTY[axisB];
   const axisColor = dark ? "rgba(255,255,250,0.20)" : "rgba(20,18,12,0.18)";
 
-  const eligible = MPS.filter((m) => m.note !== "thin");
+  const eligible: MpRow[] = realMps
+    ? realMps.map((m) => ({
+        id: m.extId,
+        name: m.name,
+        party: m.party as PartyId,
+        ax: m.ax,
+        ay: m.ay,
+        isOutlier: m.isOutlier,
+      }))
+    : MPS.filter((m) => m.note !== "thin").map((m) => ({
+        id: m.id,
+        name: m.name,
+        party: m.party,
+        ax: m.ax,
+        ay: m.ay,
+        isOutlier: m.note === "outlier",
+      }));
 
   return (
     <svg
@@ -125,7 +164,6 @@ export function PositioningScatter({
       {eligible.map((m) => {
         const isHi = hoveredId === m.id;
         const isDim = hoveredId && hoveredId !== m.id;
-        const isOutlier = m.note === "outlier";
         return (
           <g
             key={m.id}
@@ -133,7 +171,7 @@ export function PositioningScatter({
             onMouseLeave={() => handleHover(null)}
             style={{ cursor: "pointer" }}
           >
-            {isOutlier && (
+            {m.isOutlier && (
               <circle
                 cx={X(m.ax)}
                 cy={Y(m.ay)}
@@ -168,7 +206,7 @@ export function PositioningScatter({
       })}
 
       {eligible
-        .filter((m) => m.note === "outlier")
+        .filter((m) => m.isOutlier)
         .slice(0, 3)
         .map((m) => (
           <text

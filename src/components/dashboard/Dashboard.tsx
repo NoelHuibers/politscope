@@ -16,6 +16,8 @@ import { MPS } from "@/data/mps";
 import { PARTIES } from "@/data/parties";
 import { formatGerman, useCorpusStats } from "@/lib/hooks/useCorpusStats";
 import { getAtlasPoints } from "@/lib/server/atlas";
+import { getPositioning } from "@/lib/server/positioning";
+import { getScattertext } from "@/lib/server/scattertext";
 import { useFilters } from "@/state/filters";
 import { useUI } from "@/state/ui";
 import { PanelHead } from "./PanelHead";
@@ -50,6 +52,18 @@ export function Dashboard() {
           topic: topicFilter ?? undefined,
         },
       }),
+  });
+
+  const positioningQuery = useQuery({
+    queryKey: ["positioning", topicFilter, "afd", "grn"],
+    queryFn: () =>
+      getPositioning({ data: { topic: topicFilter ?? null, axisA: "afd", axisB: "grn" } }),
+  });
+
+  const scattertextQuery = useQuery({
+    queryKey: ["scattertext", topicFilter, "afd", "grn"],
+    queryFn: () =>
+      getScattertext({ data: { topic: topicFilter ?? null, partyA: "afd", partyB: "grn" } }),
   });
 
   /** Click a party in the legend → toggle it in the LeftRail party filter. */
@@ -456,9 +470,10 @@ export function Dashboard() {
                   dark={dark}
                   axisA="afd"
                   axisB="grn"
-                  topic="Alle Themen"
+                  topic={topicFilter ? "ausgewähltes Thema" : "Alle Themen"}
                   hoveredId={hoveredId}
                   onHover={setHoveredId}
+                  realMps={positioningQuery.data?.mps ?? null}
                 />
                 <div
                   style={{
@@ -522,6 +537,7 @@ export function Dashboard() {
                   partyB="grn"
                   hoveredW={hoveredW}
                   onHover={setHoveredW}
+                  realWords={scattertextQuery.data?.words ?? null}
                 />
               </div>
             </div>
