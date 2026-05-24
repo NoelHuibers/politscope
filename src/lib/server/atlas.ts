@@ -9,6 +9,10 @@ export type AtlasPoint = {
   /** UMAP-projected y, normalized to [-1, 1]. */
   y: number;
   party: string;
+  /** Speaker display name; null if the speech has no matched MP. */
+  mpName: string | null;
+  /** ISO session date — used by the hover tooltip. */
+  sessionDate: string;
 };
 
 export type AtlasResponse = {
@@ -63,8 +67,11 @@ export const getAtlasPoints = createServerFn({ method: "GET" })
       umap_x: number;
       umap_y: number;
       party: string;
+      mp_name: string | null;
+      session_date: string;
     }>(sql`
-      SELECT s.id::text AS id, s.umap_x, s.umap_y, m.party::text AS party
+      SELECT s.id::text AS id, s.umap_x, s.umap_y, m.party::text AS party,
+             m.name AS mp_name, se.date::text AS session_date
       FROM speeches s
       LEFT JOIN mps m ON s.mp_id = m.id
       LEFT JOIN sessions se ON s.session_id = se.id
@@ -103,6 +110,8 @@ export const getAtlasPoints = createServerFn({ method: "GET" })
       x: ((row.umap_x - minX) / spanX) * 2 - 1,
       y: ((row.umap_y - minY) / spanY) * 2 - 1,
       party: row.party,
+      mpName: row.mp_name,
+      sessionDate: row.session_date,
     }));
 
     return {
