@@ -15,7 +15,10 @@ type Props = {
   height?: number;
   dark?: boolean;
   highlightTopic?: TopicId | null;
+  /** If true, draws the "Neu in dieser Woche · N" badge. */
   newThisWeek?: boolean;
+  /** Count to show in the new-this-week badge. Defaults to 0 → no badge. */
+  newThisWeekCount?: number;
   /**
    * Real atlas points from the server function. If provided (length > 0),
    * replaces the synthetic mock points. Mock cluster labels still render
@@ -42,8 +45,10 @@ export function EmbeddingMap({
   dark = false,
   highlightTopic = null,
   newThisWeek = false,
+  newThisWeekCount = 0,
   realPoints = null,
 }: Props) {
+  const formattedNew = newThisWeekCount.toLocaleString("de-DE").replace(/\./g, " ");
   const points = useMemo<Point[]>(() => {
     const out: Point[] = [];
     let seed = 1;
@@ -204,7 +209,7 @@ export function EmbeddingMap({
             fontWeight={500}
             fill="var(--accent)"
           >
-            Neu in dieser Woche · 1 248
+            Neu in dieser Woche · {formattedNew}
           </text>
         </g>
       )}

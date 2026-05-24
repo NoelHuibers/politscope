@@ -1,7 +1,35 @@
-import { RECENT_DEBATES } from "@/data/debates";
+import { useQuery } from "@tanstack/react-query";
+import { useCorpusStats } from "@/lib/hooks/useCorpusStats";
+import { getRecentSessions } from "@/lib/server/directory";
 import * as m from "@/paraglide/messages";
 
+/** "2026-05-20" → "20. Mai 2026" (German long form) */
+function germanLongDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return new Intl.DateTimeFormat("de-DE", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(d);
+}
+
+/** "2026-05-20" → "20.05." */
+function germanShortDate(iso: string): string {
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return iso;
+  return `${match[3]}.${match[2]}.`;
+}
+
 export function BottomStrip() {
+  const stats = useCorpusStats();
+  const recent = useQuery({
+    queryKey: ["recent-sessions", 4],
+    queryFn: () => getRecentSessions({ data: 4 }),
+  });
+
   return (
     <div
       style={{
@@ -40,7 +68,7 @@ export function BottomStrip() {
             gap: 8,
           }}
         >
-          12. Mai 2026 · 14:22
+          {germanLongDate(stats.data?.latestDate)}
           <span
             className="pulse"
             style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)" }}
@@ -52,13 +80,10 @@ export function BottomStrip() {
         <span className="t-eyebrow" style={{ alignSelf: "center" }}>
           {m.bottom_recent_sessions()}
         </span>
-        {RECENT_DEBATES.slice(0, 4).map((d) => (
-          <div
-            key={`${d.date}-${d.title}`}
-            style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}
-          >
+        {(recent.data ?? []).map((s) => (
+          <div key={s.id} style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--muted)" }}>
-              {d.date}
+              {germanShortDate(s.date)}
             </div>
             <div
               style={{
@@ -70,22 +95,9 @@ export function BottomStrip() {
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 maxWidth: 200,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
               }}
             >
-              {d.hot && (
-                <span
-                  style={{
-                    width: 5,
-                    height: 5,
-                    borderRadius: "50%",
-                    background: "var(--accent)",
-                  }}
-                />
-              )}
-              {d.title}
+              WP{s.wahlperiode} · Sitzung {s.sitzung} · {s.speechCount} Reden
             </div>
           </div>
         ))}

@@ -2,6 +2,7 @@ import { Icon } from "@/components/Icon";
 import { PartyDot } from "@/components/PartyDot";
 import { PARTIES, type PartyId } from "@/data/parties";
 import { PERIODS } from "@/data/periods";
+import { formatGerman, useCorpusStats } from "@/lib/hooks/useCorpusStats";
 import * as m from "@/paraglide/messages";
 import { useFilters } from "@/state/filters";
 import { useUI } from "@/state/ui";
@@ -27,10 +28,22 @@ const SPEECH_COUNTS: Record<PartyId, string> = {
   bsw: "11k",
 };
 
+/** "2026-05-20" → "Q2 2026"; null → fallback string */
+function quarterLabel(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const match = iso.match(/^(\d{4})-(\d{2})/);
+  if (!(match?.[1] && match[2])) return "—";
+  const year = Number.parseInt(match[1], 10);
+  const month = Number.parseInt(match[2], 10);
+  const q = Math.ceil(month / 3);
+  return `Q${q} ${year}`;
+}
+
 export function LeftRail() {
   const [filters, setFilters] = useFilters();
   const collapsed = useUI((s) => s.leftRailCollapsed);
   const toggle = useUI((s) => s.toggleLeftRail);
+  const stats = useCorpusStats();
 
   const activeSet = new Set(filters.parties);
 
@@ -190,7 +203,8 @@ export function LeftRail() {
             marginTop: 6,
           }}
         >
-          Q1 2015 – Q2 2026 · 1 248 318 Reden
+          {quarterLabel(stats.data?.earliestDate)} – {quarterLabel(stats.data?.latestDate)} ·{" "}
+          {formatGerman(stats.data?.totalSpeeches)} Reden
         </div>
       </div>
 

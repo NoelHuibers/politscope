@@ -115,7 +115,11 @@
   },
   "overrides": [
     {
-      "includes": ["src/components/viz/**/*.tsx"],
+      "includes": [
+        "src/components/viz/**/*.tsx",
+        "src/components/profile/**/*.tsx",
+        "src/components/dashboard/**/*.tsx"
+      ],
       "linter": {
         "rules": {
           "a11y": {

@@ -13,6 +13,7 @@ import { SankeyTimeline } from "@/components/viz/SankeyTimeline";
 import { Scattertext } from "@/components/viz/Scattertext";
 import { Sparkline } from "@/components/viz/Sparkline";
 import { MPS } from "@/data/mps";
+import { formatGerman, useCorpusStats } from "@/lib/hooks/useCorpusStats";
 import { getAtlasPoints } from "@/lib/server/atlas";
 import { useUI } from "@/state/ui";
 import { PanelHead } from "./PanelHead";
@@ -40,6 +41,9 @@ export function Dashboard() {
     queryKey: ["atlas-points"],
     queryFn: () => getAtlasPoints(),
   });
+  const statsQuery = useCorpusStats();
+  const totalSpeechesLabel = formatGerman(statsQuery.data?.totalSpeeches);
+  const newThisWeekLabel = formatGerman(statsQuery.data?.newThisWeek);
   const [hoveredW, setHoveredW] = useState<string | null>(null);
   const [sankeyMode, setSankeyMode] = useState<"sankey" | "stream">("sankey");
 
@@ -87,7 +91,7 @@ export function Dashboard() {
             <PanelHead
               eyebrow="Karte · Embedding-Atlas"
               title="Reden, projiziert in den semantischen Raum"
-              hint="Jeder Punkt ist eine Rede. Cluster zeigen Themen. UMAP über 1 248 318 Reden."
+              hint={`Jeder Punkt ist eine Rede. Cluster zeigen Themen. UMAP über ${totalSpeechesLabel} Reden.`}
               ki
               right={
                 <>
@@ -146,20 +150,22 @@ export function Dashboard() {
                     Reden zu „Migration" finden…
                   </span>
                 </div>
-                <div
-                  style={{
-                    pointerEvents: "auto",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 4,
-                    alignItems: "flex-end",
-                  }}
-                >
-                  <div className="chip" style={{ background: "var(--panel)" }}>
-                    <span className="dot" style={{ background: "var(--accent)" }} />
-                    <span>1 248 neue Reden seit Montag</span>
+                {(statsQuery.data?.newThisWeek ?? 0) > 0 && (
+                  <div
+                    style={{
+                      pointerEvents: "auto",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <div className="chip" style={{ background: "var(--panel)" }}>
+                      <span className="dot" style={{ background: "var(--accent)" }} />
+                      <span>{newThisWeekLabel} neue Reden diese Woche</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
@@ -167,7 +173,8 @@ export function Dashboard() {
                   width={680}
                   height={520}
                   dark={dark}
-                  newThisWeek
+                  newThisWeek={(statsQuery.data?.newThisWeek ?? 0) > 0}
+                  newThisWeekCount={statsQuery.data?.newThisWeek ?? 0}
                   realPoints={atlasQuery.data?.points ?? null}
                 />
               </div>

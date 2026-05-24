@@ -4,14 +4,29 @@ import { LeftRail } from "@/components/layout/LeftRail";
 import { TopBar } from "@/components/layout/TopBar";
 import { PartyDot } from "@/components/PartyDot";
 import { type MP, MPS } from "@/data/mps";
-import { PARTY } from "@/data/parties";
+import { PARTY, type PartyId } from "@/data/parties";
+import type { MpProfile as MpProfileData } from "@/lib/server/directory";
 import { useUI } from "@/state/ui";
 import { ProfileSection } from "./ProfileSection";
 import { Stat } from "./Stat";
 
 type Props = {
   mpId: string;
+  /** Real MP record from DB, if URL resolved to a known extId. */
+  realProfile?: MpProfileData | null;
 };
+
+function germanLong(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return new Intl.DateTimeFormat("de-DE", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(d);
+}
 
 const TRAJECTORY_POINTS: ReadonlyArray<readonly [number, number]> = [
   [60, 160],
@@ -96,13 +111,31 @@ function PartyLabel({ mp }: { mp: MP }) {
   );
 }
 
-export function MPProfile({ mpId }: Props) {
+export function MPProfile({ mpId, realProfile = null }: Props) {
   const theme = useUI((s) => s.theme);
   const dark = theme === "dark";
-  const mp = MPS.find((m) => m.id === mpId) ?? MPS[2];
-  if (!mp) return null;
 
-  const [first, last] = mp.name.split(" ");
+  // Mock MP used for the right-column charts (trajectory, cohesion, deviations,
+  // distinctive phrases) — those need full-corpus analytics we don't have yet.
+  // The left column shows real data when realProfile is present.
+  const mockMp = MPS.find((m) => m.id === mpId) ?? MPS[2];
+  if (!mockMp) return null;
+
+  // Display values: real data overrides mock when present.
+  const displayName = realProfile?.name ?? mockMp.name;
+  const displayParty = ((realProfile?.party as PartyId | undefined) ?? mockMp.party) as PartyId;
+  const displayRole = realProfile?.role ?? mockMp.role;
+  const displaySince = realProfile?.since ?? mockMp.since;
+  const displaySpeechCount = realProfile?.totalSpeeches ?? mockMp.n;
+  const displayFirstSpeech = realProfile?.firstSpeechDate
+    ? germanLong(realProfile.firstSpeechDate)
+    : "14. März 2018";
+  const displayLastSpeech = realProfile?.lastSpeechDate
+    ? germanLong(realProfile.lastSpeechDate)
+    : "08. Mai 2026";
+
+  const mp: MP = { ...mockMp, name: displayName, party: displayParty };
+  const [first, last] = displayName.split(" ");
 
   return (
     <div
@@ -197,9 +230,7 @@ export function MPProfile({ mpId }: Props) {
                 marginBottom: 10,
               }}
             >
-              {mp.role} · MdB seit {mp.since}
-              <br />
-              ehem. Bundesminister für Wirtschaft
+              {displayRole ? `${displayRole} · ` : ""}MdB seit {displaySince ?? "?"}
             </div>
 
             <div
@@ -213,9 +244,9 @@ export function MPProfile({ mpId }: Props) {
                 borderRadius: 4,
               }}
             >
-              <Stat label="Reden gesamt" value={mp.n.toString()} />
-              <Stat label="Erste Rede" value="14. März 2018" />
-              <Stat label="Letzte Rede" value="08. Mai 2026" />
+              <Stat label="Reden gesamt" value={displaySpeechCount.toString()} />
+              <Stat label="Erste Rede" value={displayFirstSpeech} />
+              <Stat label="Letzte Rede" value={displayLastSpeech} />
               <Stat label="Ø Redelänge" value="6:42 min" />
               <Stat
                 label={`Kohäsion · ${PARTY[mp.party].name}`}
