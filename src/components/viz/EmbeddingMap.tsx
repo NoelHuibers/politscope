@@ -12,6 +12,14 @@ export type AtlasRealPoint = {
   sessionDate: string;
 };
 
+export type AtlasRealCluster = {
+  topicId: string;
+  cx: number;
+  cy: number;
+  size: number;
+  keywords: string[];
+};
+
 type Props = {
   width?: number;
   height?: number;
@@ -27,6 +35,8 @@ type Props = {
    * Mock cloud + labels remain visible only while loading (realPoints === null).
    */
   realPoints?: AtlasRealPoint[] | null;
+  /** Real cluster centroids + top keywords from #51 k-means. */
+  realClusters?: AtlasRealCluster[] | null;
   /** Fired when a real point is clicked. */
   onPointClick?: (id: string) => void;
 };
@@ -52,6 +62,7 @@ export function EmbeddingMap({
   newThisWeek = false,
   newThisWeekCount = 0,
   realPoints = null,
+  realClusters = null,
   onPointClick,
 }: Props) {
   const formattedNew = newThisWeekCount.toLocaleString("de-DE").replace(/\./g, " ");
@@ -243,6 +254,46 @@ export function EmbeddingMap({
                 onMouseLeave={() => setHovered(null)}
                 style={{ cursor: onPointClick ? "pointer" : "default" }}
               />
+            );
+          })}
+
+        {/* Real cluster labels — placed at the computed centroid of each topic.
+            Only render clusters with at least 3 keywords (skip incomplete ones). */}
+        {showRealData &&
+          realClusters?.map((c) => {
+            if (c.keywords.length === 0) return null;
+            const label = c.keywords.slice(0, 2).join(" · ");
+            const fontSize = 11 + Math.min(4, c.size / 10);
+            return (
+              <g key={c.topicId} style={{ pointerEvents: "none" }}>
+                <text
+                  x={X(c.cx)}
+                  y={Y(c.cy)}
+                  textAnchor="middle"
+                  fontFamily="var(--font-sans)"
+                  fontSize={fontSize}
+                  fontWeight={600}
+                  fill={labelColor}
+                  stroke="var(--map-bg)"
+                  strokeWidth={3.5}
+                  paintOrder="stroke"
+                >
+                  {label}
+                </text>
+                <text
+                  x={X(c.cx)}
+                  y={Y(c.cy) + fontSize + 2}
+                  textAnchor="middle"
+                  fontFamily="var(--font-mono)"
+                  fontSize={9}
+                  fill={labelMuted}
+                  stroke="var(--map-bg)"
+                  strokeWidth={3}
+                  paintOrder="stroke"
+                >
+                  {c.size} Reden
+                </text>
+              </g>
             );
           })}
 

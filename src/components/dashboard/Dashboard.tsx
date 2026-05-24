@@ -191,6 +191,7 @@ export function Dashboard() {
                   newThisWeek={(statsQuery.data?.newThisWeek ?? 0) > 0}
                   newThisWeekCount={statsQuery.data?.newThisWeek ?? 0}
                   realPoints={atlasQuery.data?.points ?? null}
+                  realClusters={atlasQuery.data?.clusters ?? null}
                   onPointClick={openSpeechInspector}
                 />
                 {atlasQuery.data && atlasQuery.data.projected === 0 && (

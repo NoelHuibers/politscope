@@ -1,0 +1,333 @@
+{
+  "generatedAt": "2026-05-24T12:03:40.922Z",
+  "k": 8,
+  "numSpeeches": 174,
+  "clusters": {
+    "cluster-4": [
+      {
+        "word": "wissenschaft",
+        "score": 0.0092026349078597,
+        "count": 26
+      },
+      {
+        "word": "klimapolitik",
+        "score": 0.008848687411403556,
+        "count": 25
+      },
+      {
+        "word": "szenario",
+        "score": 0.008848687411403556,
+        "count": 25
+      },
+      {
+        "word": "grad",
+        "score": 0.007078949929122845,
+        "count": 20
+      },
+      {
+        "word": "szenarien",
+        "score": 0.006725002432666703,
+        "count": 19
+      },
+      {
+        "word": "mittelstreckenraketen",
+        "score": 0.005663159943298276,
+        "count": 16
+      },
+      {
+        "word": "energien",
+        "score": 0.005427194945660849,
+        "count": 23
+      },
+      {
+        "word": "klimawandel",
+        "score": 0.005309212446842133,
+        "count": 15
+      }
+    ],
+    "cluster-2": [
+      {
+        "word": "reparatur",
+        "score": 0.01855091422741978,
+        "count": 32
+      },
+      {
+        "word": "rechtsstaat",
+        "score": 0.0144929017401717,
+        "count": 25
+      },
+      {
+        "word": "paralleljustiz",
+        "score": 0.0144929017401717,
+        "count": 25
+      },
+      {
+        "word": "hersteller",
+        "score": 0.010434889252923626,
+        "count": 18
+      },
+      {
+        "word": "reparieren",
+        "score": 0.00927545711370989,
+        "count": 16
+      },
+      {
+        "word": "lagebild",
+        "score": 0.00927545711370989,
+        "count": 16
+      },
+      {
+        "word": "gerät",
+        "score": 0.006376876765675548,
+        "count": 11
+      },
+      {
+        "word": "reparaturen",
+        "score": 0.00579716069606868,
+        "count": 10
+      }
+    ],
+    "cluster-1": [
+      {
+        "word": "bereichsausnahme",
+        "score": 0.00958267991557528,
+        "count": 5
+      },
+      {
+        "word": "zoll",
+        "score": 0.008943834587870262,
+        "count": 7
+      },
+      {
+        "word": "resilienter",
+        "score": 0.007666143932460224,
+        "count": 4
+      },
+      {
+        "word": "investitionen",
+        "score": 0.007027298604755206,
+        "count": 11
+      },
+      {
+        "word": "kritik",
+        "score": 0.006388453277050187,
+        "count": 5
+      },
+      {
+        "word": "investieren",
+        "score": 0.005749607949345169,
+        "count": 9
+      },
+      {
+        "word": "beitragen",
+        "score": 0.005749607949345168,
+        "count": 3
+      },
+      {
+        "word": "schäfer",
+        "score": 0.005749607949345168,
+        "count": 3
+      }
+    ],
+    "cluster-6": [
+      {
+        "word": "wohngeld",
+        "score": 0.018327281384296856,
+        "count": 13
+      },
+      {
+        "word": "einkommen",
+        "score": 0.011278327005721143,
+        "count": 12
+      },
+      {
+        "word": "entlasten",
+        "score": 0.011278327005721143,
+        "count": 12
+      },
+      {
+        "word": "mittleren",
+        "score": 0.007518884670480763,
+        "count": 8
+      },
+      {
+        "word": "einkommensteuerreform",
+        "score": 0.007048954378575714,
+        "count": 5
+      },
+      {
+        "word": "einkommensteuer",
+        "score": 0.005639163502860572,
+        "count": 4
+      },
+      {
+        "word": "entlastungsprämie",
+        "score": 0.005639163502860572,
+        "count": 4
+      },
+      {
+        "word": "milliarde",
+        "score": 0.004699302919050476,
+        "count": 5
+      }
+    ],
+    "cluster-3": [
+      {
+        "word": "wohnraum",
+        "score": 0.015173371116735121,
+        "count": 11
+      },
+      {
+        "word": "bauturbo",
+        "score": 0.011711394065811656,
+        "count": 12
+      },
+      {
+        "word": "wohnungsbau",
+        "score": 0.010345480306864854,
+        "count": 5
+      },
+      {
+        "word": "vonovia",
+        "score": 0.008276384245491883,
+        "count": 4
+      },
+      {
+        "word": "gemeinwohlorientierte",
+        "score": 0.008276384245491883,
+        "count": 4
+      },
+      {
+        "word": "bezahlbaren",
+        "score": 0.008276384245491883,
+        "count": 4
+      },
+      {
+        "word": "wohnungsnot",
+        "score": 0.008276384245491883,
+        "count": 4
+      },
+      {
+        "word": "baukosten",
+        "score": 0.008276384245491883,
+        "count": 4
+      }
+    ],
+    "cluster-7": [
+      {
+        "word": "baugesetzbuch",
+        "score": 0.010208353174667823,
+        "count": 5
+      },
+      {
+        "word": "baugb",
+        "score": 0.009187517857201042,
+        "count": 3
+      },
+      {
+        "word": "novelle",
+        "score": 0.009187517857201042,
+        "count": 3
+      },
+      {
+        "word": "rohstoffe",
+        "score": 0.009187517857201042,
+        "count": 3
+      },
+      {
+        "word": "beteiligung",
+        "score": 0.009187517857201042,
+        "count": 3
+      },
+      {
+        "word": "regelungen",
+        "score": 0.009187517857201042,
+        "count": 3
+      },
+      {
+        "word": "bauturbo",
+        "score": 0.008667121528822323,
+        "count": 6
+      },
+      {
+        "word": "baugesetzbuchnovelle",
+        "score": 0.008166682539734259,
+        "count": 4
+      }
+    ],
+    "cluster-5": [
+      {
+        "word": "sudan",
+        "score": 0.043821648143779784,
+        "count": 42
+      },
+      {
+        "word": "humanitäre",
+        "score": 0.015650588622778492,
+        "count": 15
+      },
+      {
+        "word": "konferenz",
+        "score": 0.015650588622778492,
+        "count": 15
+      },
+      {
+        "word": "hilfe",
+        "score": 0.011129307465086929,
+        "count": 16
+      },
+      {
+        "word": "humanitären",
+        "score": 0.007303608023963297,
+        "count": 7
+      },
+      {
+        "word": "kriegsverbrechen",
+        "score": 0.006260235449111397,
+        "count": 6
+      },
+      {
+        "word": "waffenlieferungen",
+        "score": 0.006260235449111397,
+        "count": 6
+      },
+      {
+        "word": "wadephul",
+        "score": 0.006260235449111397,
+        "count": 6
+      }
+    ],
+    "cluster-0": [
+      {
+        "word": "bundeshaushalt",
+        "score": 0.03504676755640172,
+        "count": 3
+      },
+      {
+        "word": "subventionen",
+        "score": 0.022041106809252274,
+        "count": 4
+      },
+      {
+        "word": "finanzierung",
+        "score": 0.016530830106939204,
+        "count": 3
+      },
+      {
+        "word": "milliarden",
+        "score": 0.011313339927879022,
+        "count": 7
+      },
+      {
+        "word": "euro",
+        "score": 0.006001410904472924,
+        "count": 8
+      },
+      {
+        "word": "bundesregierung",
+        "score": 0,
+        "count": 3
+      }
+    ]
+  }
+}
