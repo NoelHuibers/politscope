@@ -215,36 +215,13 @@ export function MPProfile({ realProfile }: Props) {
             </a>
           </div>
 
-          {/* Right column */}
+          {/* Right column — analytical sections first, raw speech list at the bottom */}
           <div style={{ display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
-            <ProfileSection
-              title="Alle Reden"
-              eyebrow={`${speechesQuery.data?.length ?? "—"} Reden im Korpus`}
-              hint="Chronologisch absteigend. Klick öffnet die vollständige Rede."
-            >
-              {speechesQuery.isPending && (
-                <div style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0" }}>
-                  Lade Reden…
-                </div>
-              )}
-              {speechesQuery.data && speechesQuery.data.length === 0 && (
-                <div style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0" }}>
-                  Keine Reden im Korpus.
-                </div>
-              )}
-              {speechesQuery.data && speechesQuery.data.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {speechesQuery.data.map((s) => (
-                    <SpeechListItem
-                      key={s.id}
-                      speech={s}
-                      showSpeaker={false}
-                      onSelect={openSpeechInspector}
-                    />
-                  ))}
-                </div>
-              )}
-            </ProfileSection>
+            <InsufficientDataFrame
+              speechCount={displaySpeechCount}
+              threshold={10}
+              mpName={displayName}
+            />
 
             {fingerprintQuery.data && fingerprintMp && fingerprintMp.quarters.length >= 2 && (
               <ProfileSection
@@ -256,12 +233,6 @@ export function MPProfile({ realProfile }: Props) {
                 <FingerprintGrid width={660} realData={fingerprintQuery.data} columns={1} />
               </ProfileSection>
             )}
-
-            <InsufficientDataFrame
-              speechCount={displaySpeechCount}
-              threshold={10}
-              mpName={displayName}
-            />
 
             <ProfileSection
               title="Charakteristische Wendungen"
@@ -308,6 +279,35 @@ export function MPProfile({ realProfile }: Props) {
                   </div>
                 );
               })()}
+            </ProfileSection>
+
+            <ProfileSection
+              title="Alle Reden"
+              eyebrow={`${speechesQuery.data?.length ?? "—"} Reden im Korpus`}
+              hint="Chronologisch absteigend. Klick öffnet die vollständige Rede."
+            >
+              {speechesQuery.isPending && (
+                <div style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0" }}>
+                  Lade Reden…
+                </div>
+              )}
+              {speechesQuery.data && speechesQuery.data.length === 0 && (
+                <div style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0" }}>
+                  Keine Reden im Korpus.
+                </div>
+              )}
+              {speechesQuery.data && speechesQuery.data.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {speechesQuery.data.map((s) => (
+                    <SpeechListItem
+                      key={s.id}
+                      speech={s}
+                      showSpeaker={false}
+                      onSelect={openSpeechInspector}
+                    />
+                  ))}
+                </div>
+              )}
             </ProfileSection>
           </div>
         </div>
