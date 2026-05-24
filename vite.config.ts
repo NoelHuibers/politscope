@@ -1,12 +1,18 @@
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
+import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  server: {
+    port: 3000,
+  },
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
-    tsconfigPaths({ projects: ["./tsconfig.json"] }),
     tailwindcss(),
     paraglideVitePlugin({
       project: "./project.inlang",
@@ -21,8 +27,7 @@ export default defineConfig({
         generatedRouteTree: "./routeTree.gen.ts",
       },
     }),
+    viteReact(),
+    nitro(),
   ],
-  server: {
-    port: 3000,
-  },
 });

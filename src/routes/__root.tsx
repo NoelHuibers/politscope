@@ -1,10 +1,10 @@
-import type { QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { NuqsAdapter } from "nuqs/adapters/react";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import appCss from "@/styles/app.css?url";
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -22,11 +22,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootComponent() {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60_000,
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  );
+
   return (
     <RootDocument>
-      <NuqsAdapter>
-        <Outlet />
-      </NuqsAdapter>
+      <QueryClientProvider client={queryClient}>
+        <NuqsAdapter>
+          <Outlet />
+        </NuqsAdapter>
+      </QueryClientProvider>
     </RootDocument>
   );
 }

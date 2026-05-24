@@ -40,6 +40,14 @@ export function Dashboard() {
     queryKey: ["atlas-points"],
     queryFn: () => getAtlasPoints(),
   });
+
+  // Tracer-bullet debug — surfaces query state in the UI so we can see
+  // immediately whether real data is reaching the atlas. Remove after #45 lands.
+  const atlasDebug = atlasQuery.isPending
+    ? "loading"
+    : atlasQuery.isError
+      ? `error: ${atlasQuery.error instanceof Error ? atlasQuery.error.message : String(atlasQuery.error)}`
+      : `${atlasQuery.data?.projected ?? 0} / ${atlasQuery.data?.total ?? 0} points`;
   const [hoveredW, setHoveredW] = useState<string | null>(null);
   const [sankeyMode, setSankeyMode] = useState<"sankey" | "stream">("sankey");
 
@@ -170,6 +178,23 @@ export function Dashboard() {
                   newThisWeek
                   realPoints={atlasQuery.data?.points ?? null}
                 />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    padding: "4px 8px",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 10,
+                    color: "var(--ink-2)",
+                    background: "var(--panel)",
+                    border: "1px solid var(--hairline)",
+                    borderRadius: 4,
+                    zIndex: 3,
+                  }}
+                >
+                  atlas: {atlasDebug}
+                </div>
               </div>
 
               <div

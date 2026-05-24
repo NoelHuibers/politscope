@@ -13,6 +13,7 @@
       "!**/.vinxi",
       "!**/.output",
       "!**/.vercel",
+      "!**/.tanstack",
       "!**/dist",
       "!**/build",
       "!**/playwright-report",
