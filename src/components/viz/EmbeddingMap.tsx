@@ -1,8 +1,10 @@
-import { useMemo, useRef, useState } from "react";
-import { PARTY, type PartyId } from "@/data/parties";
-import { TOPICS, type TopicId } from "@/data/topics";
+import { OrthographicView, type PickingInfo } from "@deck.gl/core";
+import { ScatterplotLayer } from "@deck.gl/layers";
+import DeckGL from "@deck.gl/react";
+import { useEffect, useMemo, useState } from "react";
+import { PARTY, type PartyId, partyRgb } from "@/data/parties";
+import { TOPICS } from "@/data/topics";
 
-/** Real point from the atlas server function — see src/lib/server/atlas.ts */
 export type AtlasRealPoint = {
   id: string;
   x: number;
@@ -24,37 +26,28 @@ type Props = {
   width?: number;
   height?: number;
   dark?: boolean;
-  highlightTopic?: TopicId | null;
-  /** If true, draws the "Neu in dieser Woche · N" badge. */
   newThisWeek?: boolean;
-  /** Count to show in the new-this-week badge. Defaults to 0 → no badge. */
   newThisWeekCount?: number;
-  /**
-   * Real atlas points from the server function. When non-null, replaces the
-   * mock cloud + hides the mock topic labels (since their positions are fake).
-   * Mock cloud + labels remain visible only while loading (realPoints === null).
-   */
   realPoints?: AtlasRealPoint[] | null;
-  /** Real cluster centroids + top keywords from #51 k-means. */
   realClusters?: AtlasRealCluster[] | null;
-  /** Currently active topic filter (from nuqs); cluster label renders highlighted when matched. */
   activeTopicId?: string | null;
-  /** Active party filter — only legend rows in this list show as selected. undefined = all selected. */
   activePartyIds?: string[];
-  /** Fired when a real point is clicked. */
   onPointClick?: (id: string) => void;
-  /** Click on a cluster label — toggles topic filter. */
   onClusterClick?: (topicId: string) => void;
-  /** Click on a legend party row — toggles party in filter. */
   onLegendPartyClick?: (partyId: string) => void;
 };
 
-type Point = {
-  x: number;
-  y: number;
-  tid: TopicId;
-  fresh: boolean;
+type ViewState = {
+  target: [number, number, number];
+  zoom: number;
 };
+
+const INITIAL_VIEW_STATE: ViewState = {
+  target: [0, 0, 0],
+  zoom: 7.8,
+};
+
+const VIEW = new OrthographicView({ id: "ortho", flipY: true });
 
 function germanShortDate(iso: string): string {
   const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -63,10 +56,7 @@ function germanShortDate(iso: string): string {
 }
 
 export function EmbeddingMap({
-  width = 700,
-  height = 540,
   dark = false,
-  highlightTopic = null,
   newThisWeek = false,
   newThisWeekCount = 0,
   realPoints = null,
@@ -78,14 +68,22 @@ export function EmbeddingMap({
   onLegendPartyClick,
 }: Props) {
   const formattedNew = newThisWeekCount.toLocaleString("de-DE").replace(/\./g, " ");
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const [hovered, setHovered] = useState<{ point: AtlasRealPoint; cx: number; cy: number } | null>(
-    null,
-  );
+  const [viewState, setViewState] = useState<ViewState>(INITIAL_VIEW_STATE);
+  const [mounted, setMounted] = useState(false);
+  const [hovered, setHovered] = useState<{
+    point: AtlasRealPoint;
+    px: number;
+    py: number;
+  } | null>(null);
 
-  // Mock points — only shown while real data hasn't arrived yet (skeleton state).
-  const points = useMemo<Point[]>(() => {
-    const out: Point[] = [];
+  // DeckGL must not render during SSR (WebGL is browser-only).
+  useEffect(() => setMounted(true), []);
+
+  const showRealData = realPoints !== null;
+
+  // Mock points generated once for the loading skeleton.
+  const mockPoints = useMemo(() => {
+    const out: { x: number; y: number }[] = [];
     let seed = 1;
     const rand = () => {
       seed = (seed * 9301 + 49297) % 233280;
@@ -93,34 +91,15 @@ export function EmbeddingMap({
     };
     for (const t of TOPICS) {
       const n = Math.round(t.n / 700);
-      for (let i = 0; i < n; i++) {
+      for (let i = 0; i < n; i += 1) {
         const r = (rand() + rand() + rand()) / 3 - 0.5;
         const r2 = (rand() + rand() + rand()) / 3 - 0.5;
-        out.push({
-          x: t.x + r * 0.42,
-          y: t.y + r2 * 0.36,
-          tid: t.id,
-          fresh: rand() < 0.012,
-        });
+        out.push({ x: t.x + r * 0.42, y: t.y + r2 * 0.36 });
       }
     }
     return out;
   }, []);
 
-  const pad = 24;
-  const W = width;
-  const H = height;
-  const X = (x: number) => pad + ((x + 1) / 2) * (W - 2 * pad);
-  const Y = (y: number) => pad + ((y + 1) / 2) * (H - 2 * pad);
-
-  const dotColor = dark ? "rgba(220,210,190,0.34)" : "rgba(40,30,20,0.32)";
-  const dotColorDim = dark ? "rgba(220,210,190,0.10)" : "rgba(40,30,20,0.08)";
-  const labelColor = dark ? "rgba(232,230,224,0.95)" : "rgba(20,18,12,0.85)";
-  const labelMuted = dark ? "rgba(232,230,224,0.55)" : "rgba(20,18,12,0.50)";
-
-  const showRealData = realPoints !== null;
-
-  // Legend: parties present in current real data, sorted by frequency descending.
   const legend = useMemo(() => {
     if (!realPoints || realPoints.length === 0) return [];
     const counts = new Map<string, number>();
@@ -131,222 +110,147 @@ export function EmbeddingMap({
       .sort((a, b) => b.count - a.count);
   }, [realPoints]);
 
+  const dotColor: [number, number, number] = dark ? [220, 210, 190] : [40, 30, 20];
+
+  const layers = useMemo(() => {
+    if (showRealData && realPoints) {
+      return [
+        new ScatterplotLayer<AtlasRealPoint>({
+          id: "real-points",
+          data: realPoints,
+          getPosition: (p) => [p.x, p.y],
+          getFillColor: (p) => {
+            const [r, g, b] = partyRgb(p.party as PartyId, dark);
+            return [r, g, b, 220];
+          },
+          getRadius: 6,
+          radiusUnits: "pixels",
+          radiusMinPixels: 2.5,
+          radiusMaxPixels: 14,
+          pickable: onPointClick !== undefined,
+          onClick: onPointClick
+            ? (info: PickingInfo<AtlasRealPoint>) => {
+                if (info.object) onPointClick(info.object.id);
+              }
+            : undefined,
+          onHover: (info: PickingInfo<AtlasRealPoint>) => {
+            if (info.object && info.x !== undefined && info.y !== undefined) {
+              setHovered({ point: info.object, px: info.x, py: info.y });
+            } else {
+              setHovered(null);
+            }
+          },
+          autoHighlight: true,
+          highlightColor: [255, 255, 255, 80],
+        }),
+      ];
+    }
+    return [
+      new ScatterplotLayer({
+        id: "mock-points",
+        data: mockPoints,
+        getPosition: (p: { x: number; y: number }) => [p.x, p.y],
+        getFillColor: () => [dotColor[0], dotColor[1], dotColor[2], 90],
+        getRadius: 3,
+        radiusUnits: "pixels",
+        pickable: false,
+      }),
+    ];
+  }, [showRealData, realPoints, mockPoints, dark, onPointClick, dotColor]);
+
+  // Pre-compute zoom scale + target so the cluster-label sub-components depend
+  // on primitive numbers (no fresh-closure infinite-render-loop trap).
+  const zoomScale = 2 ** viewState.zoom;
+  const targetX = viewState.target[0];
+  const targetY = viewState.target[1];
+
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <svg
-        ref={svgRef}
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="xMidYMid slice"
-        style={{
-          display: "block",
-          background: "var(--map-bg)",
-          borderRadius: 4,
-          width: "100%",
-          height: "100%",
-        }}
-        role="img"
-        aria-label="Embedding-Atlas der Bundestagsreden"
-      >
-        {/* Grid lines always visible — pure decoration */}
-        {[-0.5, 0, 0.5].map((v) => (
-          <g key={v}>
-            <line x1={X(v)} y1={pad} x2={X(v)} y2={H - pad} stroke="var(--map-grid)" />
-            <line x1={pad} y1={Y(v)} x2={W - pad} y2={Y(v)} stroke="var(--map-grid)" />
-          </g>
-        ))}
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        background: "var(--map-bg)",
+        borderRadius: 4,
+        overflow: "hidden",
+      }}
+    >
+      {mounted && (
+        <DeckGL
+          views={VIEW}
+          initialViewState={INITIAL_VIEW_STATE}
+          viewState={viewState}
+          onViewStateChange={({ viewState: v }) => setViewState(v as ViewState)}
+          controller={true}
+          layers={layers}
+          style={{ position: "absolute", inset: "0" }}
+        />
+      )}
 
-        {/* Mock background blobs + labels only while loading — they're at fake positions */}
-        {!showRealData && (
-          <>
-            <defs>
-              {TOPICS.map((t) => (
-                <radialGradient key={t.id} id={`blob-${t.id}`} cx="50%" cy="50%" r="50%">
-                  <stop
-                    offset="0%"
-                    stopColor={dark ? "rgba(184,90,82,0.22)" : "rgba(184,90,82,0.16)"}
-                  />
-                  <stop
-                    offset="55%"
-                    stopColor={dark ? "rgba(184,90,82,0.06)" : "rgba(184,90,82,0.05)"}
-                  />
-                  <stop offset="100%" stopColor="rgba(184,90,82,0)" />
-                </radialGradient>
-              ))}
-            </defs>
-
-            {TOPICS.map((t) => {
-              const rx = 60 + Math.sqrt(t.n) / 8;
-              const ry = rx * 0.85;
-              const dim = highlightTopic && highlightTopic !== t.id ? 0.35 : 1;
-              return (
-                <ellipse
-                  key={t.id}
-                  cx={X(t.x)}
-                  cy={Y(t.y)}
-                  rx={rx}
-                  ry={ry}
-                  fill={`url(#blob-${t.id})`}
-                  opacity={dim}
-                />
-              );
-            })}
-
-            {points.map((p, i) => {
-              const dim = highlightTopic && highlightTopic !== p.tid;
-              const isFresh = p.fresh && newThisWeek;
-              return (
-                <circle
-                  // biome-ignore lint/suspicious/noArrayIndexKey: stable seeded order, no insertions
-                  key={i}
-                  cx={X(p.x)}
-                  cy={Y(p.y)}
-                  r={isFresh ? 2.2 : 1.2}
-                  fill={isFresh ? "var(--accent)" : dim ? dotColorDim : dotColor}
-                  opacity={isFresh ? 1 : dim ? 1 : 0.92}
-                />
-              );
-            })}
-
-            {TOPICS.map((t) => {
-              const big = (["wirt", "soz", "umw", "auss", "haus"] as const).includes(t.id as never);
-              const dimmed = highlightTopic && highlightTopic !== t.id;
-              return (
-                <g key={t.id}>
-                  <text
-                    x={X(t.x)}
-                    y={Y(t.y)}
-                    textAnchor="middle"
-                    fontFamily="var(--font-sans)"
-                    fontSize={big ? 13 : 11.5}
-                    fontWeight={big ? 600 : 500}
-                    fill={dimmed ? labelMuted : labelColor}
-                    style={{ pointerEvents: "none" }}
-                  >
-                    {t.label}
-                  </text>
-                  {big && (
-                    <text
-                      x={X(t.x)}
-                      y={Y(t.y) + 14}
-                      textAnchor="middle"
-                      fontFamily="var(--font-mono)"
-                      fontSize={9.5}
-                      fill={labelMuted}
-                      style={{ pointerEvents: "none" }}
-                    >
-                      {(t.n / 1000).toFixed(0)}k
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-          </>
-        )}
-
-        {/* Real dots — only when data has loaded */}
-        {showRealData &&
-          realPoints.map((p) => {
-            const partyDef = PARTY[p.party as PartyId];
-            const fill = partyDef ? partyDef.colorVar : dotColor;
-            const isHovered = hovered?.point.id === p.id;
-            return (
-              <circle
-                key={p.id}
-                cx={X(p.x)}
-                cy={Y(p.y)}
-                r={isHovered ? 4 : 2.4}
-                fill={fill}
-                opacity={isHovered ? 1 : 0.85}
-                stroke={isHovered ? "var(--ink)" : "none"}
-                strokeWidth={isHovered ? 1 : 0}
-                onClick={onPointClick ? () => onPointClick(p.id) : undefined}
-                onMouseEnter={() => setHovered({ point: p, cx: X(p.x), cy: Y(p.y) })}
-                onMouseLeave={() => setHovered(null)}
-                style={{ cursor: onPointClick ? "pointer" : "default" }}
-              />
-            );
-          })}
-
-        {/* Real cluster labels — placed at the computed centroid of each topic.
-            Clickable to toggle the topic filter. */}
-        {showRealData &&
-          realClusters?.map((c) => {
-            if (c.keywords.length === 0) return null;
-            const label = c.keywords.slice(0, 2).join(" · ");
-            const fontSize = 11 + Math.min(4, c.size / 10);
-            const isActive = activeTopicId === c.topicId;
-            const labelFill = isActive ? "var(--accent)" : labelColor;
-            const clickable = onClusterClick !== undefined;
-            return (
-              <g
-                key={c.topicId}
-                onClick={clickable ? () => onClusterClick?.(c.topicId) : undefined}
-                style={{
-                  cursor: clickable ? "pointer" : "default",
-                  pointerEvents: clickable ? "auto" : "none",
-                }}
-              >
-                <text
-                  x={X(c.cx)}
-                  y={Y(c.cy)}
-                  textAnchor="middle"
-                  fontFamily="var(--font-sans)"
-                  fontSize={fontSize}
-                  fontWeight={isActive ? 700 : 600}
-                  fill={labelFill}
-                  stroke="var(--map-bg)"
-                  strokeWidth={3.5}
-                  paintOrder="stroke"
-                >
-                  {label}
-                </text>
-                <text
-                  x={X(c.cx)}
-                  y={Y(c.cy) + fontSize + 2}
-                  textAnchor="middle"
-                  fontFamily="var(--font-mono)"
-                  fontSize={9}
-                  fill={isActive ? "var(--accent)" : labelMuted}
-                  stroke="var(--map-bg)"
-                  strokeWidth={3}
-                  paintOrder="stroke"
-                >
-                  {c.size} Reden
-                </text>
-              </g>
-            );
-          })}
-
-        {newThisWeek && (
-          <g transform={`translate(${W - pad - 142}, ${pad + 4})`}>
-            <rect
-              x={0}
-              y={0}
-              width={138}
-              height={22}
-              rx={11}
-              fill={dark ? "rgba(217,122,110,0.14)" : "rgba(184,90,82,0.10)"}
-              stroke="var(--accent)"
-              strokeOpacity="0.4"
+      {/* Cluster labels — positioned in screen coords via viewState projection.
+          Re-render on every viewState change (handled by React). */}
+      {showRealData &&
+        realClusters?.map((c) => {
+          if (c.keywords.length === 0) return null;
+          const label = c.keywords.slice(0, 2).join(" · ");
+          const fontSize = 11 + Math.min(4, c.size / 10);
+          const isActive = activeTopicId === c.topicId;
+          const clickable = onClusterClick !== undefined;
+          return (
+            <ClusterLabel
+              key={c.topicId}
+              cx={c.cx}
+              cy={c.cy}
+              size={c.size}
+              label={label}
+              fontSize={fontSize}
+              isActive={isActive}
+              clickable={clickable}
+              dark={dark}
+              zoomScale={zoomScale}
+              targetX={targetX}
+              targetY={targetY}
+              onClick={clickable ? () => onClusterClick?.(c.topicId) : undefined}
             />
-            <circle cx={11} cy={11} r={3.2} fill="var(--accent)" />
-            <text
-              x={22}
-              y={15}
-              fontFamily="var(--font-sans)"
-              fontSize={10.5}
-              fontWeight={500}
-              fill="var(--accent)"
-            >
-              Neu in dieser Woche · {formattedNew}
-            </text>
-          </g>
-        )}
-      </svg>
+          );
+        })}
 
-      {/* Legend overlay — only when real data loaded with at least one party */}
+      {/* "Neu in dieser Woche" badge — fixed position top-right */}
+      {newThisWeek && (
+        <div
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            padding: "5px 10px",
+            background: dark ? "rgba(217,122,110,0.14)" : "rgba(184,90,82,0.10)",
+            border: "1px solid var(--accent)",
+            borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)",
+            borderRadius: 11,
+            fontFamily: "var(--font-sans)",
+            fontSize: 10.5,
+            fontWeight: 500,
+            color: "var(--accent)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            zIndex: 1,
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "var(--accent)",
+              display: "inline-block",
+            }}
+          />
+          Neu in dieser Woche · {formattedNew}
+        </div>
+      )}
+
+      {/* Legend overlay — top-left */}
       {showRealData && legend.length > 0 && (
         <div
           style={{
@@ -390,13 +294,6 @@ export function EmbeddingMap({
                   fontSize: 10.5,
                   opacity: isActive ? 1 : 0.4,
                   textAlign: "left",
-                  transition: "opacity 0.12s ease, background 0.12s ease",
-                }}
-                onMouseEnter={(e) => {
-                  if (clickable) e.currentTarget.style.background = "var(--bg-2)";
-                }}
-                onMouseLeave={(e) => {
-                  if (clickable) e.currentTarget.style.background = "transparent";
                 }}
               >
                 <span
@@ -425,13 +322,13 @@ export function EmbeddingMap({
         </div>
       )}
 
-      {/* Hover tooltip — single overlay positioned in SVG viewport coords via percentage */}
+      {/* Hover tooltip — pixel coords from deck.gl */}
       {hovered && (
         <div
           style={{
             position: "absolute",
-            left: `${(hovered.cx / W) * 100}%`,
-            top: `${(hovered.cy / H) * 100}%`,
+            left: hovered.px,
+            top: hovered.py,
             transform: "translate(-50%, calc(-100% - 14px))",
             pointerEvents: "none",
             background: "var(--panel)",
@@ -470,6 +367,150 @@ export function EmbeddingMap({
           </div>
         </div>
       )}
+
+      {/* Pan/zoom hint — bottom-right, subtle */}
+      {showRealData && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 8,
+            right: 12,
+            fontFamily: "var(--font-mono)",
+            fontSize: 9,
+            color: "var(--muted)",
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        >
+          Ziehen zum Verschieben · Scroll zum Zoomen
+        </div>
+      )}
     </div>
+  );
+}
+
+// ---- internal sub-component for cluster labels ----
+
+type ClusterLabelProps = {
+  cx: number;
+  cy: number;
+  size: number;
+  label: string;
+  fontSize: number;
+  isActive: boolean;
+  clickable: boolean;
+  dark: boolean;
+  /** 2^viewState.zoom — world units → screen pixels multiplier. */
+  zoomScale: number;
+  /** viewState.target[0] / [1] — pan offset in world coords. */
+  targetX: number;
+  targetY: number;
+  onClick?: () => void;
+};
+
+function ClusterLabel({
+  cx,
+  cy,
+  fontSize,
+  size,
+  label,
+  isActive,
+  clickable,
+  dark,
+  zoomScale,
+  targetX,
+  targetY,
+  onClick,
+}: ClusterLabelProps) {
+  const [containerRef, setContainerRef] = useState<HTMLButtonElement | null>(null);
+  const [pos, setPos] = useState<[number, number] | null>(null);
+
+  useEffect(() => {
+    if (!containerRef) return;
+    const parent = containerRef.parentElement;
+    if (!parent) return;
+    const update = () => {
+      const rect = parent.getBoundingClientRect();
+      const dx = (cx - targetX) * zoomScale;
+      const dy = (cy - targetY) * zoomScale;
+      setPos([rect.width / 2 + dx, rect.height / 2 + dy]);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(parent);
+    return () => ro.disconnect();
+  }, [containerRef, cx, cy, zoomScale, targetX, targetY]);
+
+  // Recompute on every parent render via the project closure
+  // (it captures viewState — when viewState changes, project changes, useEffect fires).
+  // When pos is null (still measuring), render an invisible placeholder button that
+  // sets the ref so the effect can run.
+  if (!pos) {
+    return (
+      <button
+        ref={setContainerRef}
+        type="button"
+        tabIndex={-1}
+        style={{ position: "absolute", display: "none" }}
+      />
+    );
+  }
+
+  const labelColor = isActive
+    ? "var(--accent)"
+    : dark
+      ? "rgba(232,230,224,0.95)"
+      : "rgba(20,18,12,0.85)";
+  const subColor = isActive
+    ? "var(--accent)"
+    : dark
+      ? "rgba(232,230,224,0.55)"
+      : "rgba(20,18,12,0.50)";
+
+  return (
+    <button
+      ref={setContainerRef}
+      type="button"
+      disabled={!clickable}
+      onClick={clickable ? onClick : undefined}
+      style={{
+        position: "absolute",
+        left: pos[0],
+        top: pos[1],
+        transform: "translate(-50%, -50%)",
+        background: "transparent",
+        border: "none",
+        padding: 0,
+        cursor: clickable ? "pointer" : "default",
+        pointerEvents: clickable ? "auto" : "none",
+        textAlign: "center",
+        zIndex: 1,
+      }}
+    >
+      <div
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontSize,
+          fontWeight: isActive ? 700 : 600,
+          color: labelColor,
+          textShadow:
+            "0 0 4px var(--map-bg), 0 0 4px var(--map-bg), 0 0 6px var(--map-bg), 0 0 6px var(--map-bg)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: 9,
+          color: subColor,
+          textShadow: "0 0 4px var(--map-bg), 0 0 4px var(--map-bg)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {size} Reden
+      </div>
+    </button>
   );
 }
