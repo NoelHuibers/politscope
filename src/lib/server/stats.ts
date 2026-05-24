@@ -12,6 +12,10 @@ export type CorpusStats = {
   latestDate: string | null;
   /** Speeches added in the last 7 days (by sessions.date), for the "new this week" badge. */
   newThisWeek: number;
+  /** Wahlperioden actually present in the corpus, sorted ascending. */
+  availableWps: number[];
+  /** Speech count per party (party id → count). */
+  speechesByParty: Record<string, number>;
 };
 
 /**
@@ -43,6 +47,18 @@ export const getCorpusStats = createServerFn({ method: "GET" }).handler(
       `)
     ).rows;
 
+    const wps = await db.execute<{ wahlperiode: number }>(sql`
+      SELECT DISTINCT wahlperiode FROM sessions ORDER BY wahlperiode
+    `);
+    const parties = await db.execute<{ party: string; n: number }>(sql`
+      SELECT m.party::text AS party, COUNT(*)::int AS n
+      FROM speeches sp
+      JOIN mps m ON sp.mp_id = m.id
+      GROUP BY m.party
+    `);
+    const speechesByParty: Record<string, number> = {};
+    for (const r of parties.rows) speechesByParty[r.party] = r.n;
+
     return {
       totalSpeeches: Number(row?.total_speeches ?? 0),
       totalMps: Number(row?.total_mps ?? 0),
@@ -50,6 +66,8 @@ export const getCorpusStats = createServerFn({ method: "GET" }).handler(
       earliestDate: row?.earliest_date ?? null,
       latestDate: row?.latest_date ?? null,
       newThisWeek: Number(row?.new_this_week ?? 0),
+      availableWps: wps.rows.map((r) => r.wahlperiode),
+      speechesByParty,
     };
   },
 );

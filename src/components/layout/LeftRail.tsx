@@ -7,6 +7,12 @@ import * as m from "@/paraglide/messages";
 import { useFilters } from "@/state/filters";
 import { useUI } from "@/state/ui";
 
+function compactCount(n: number | undefined): string {
+  if (n === undefined || n === null) return "—";
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return n.toLocaleString("de-DE");
+}
+
 const SECTION_HEAD: React.CSSProperties = {
   fontFamily: "var(--font-sans)",
   fontSize: 10.5,
@@ -15,17 +21,6 @@ const SECTION_HEAD: React.CSSProperties = {
   textTransform: "uppercase",
   color: "var(--muted)",
   margin: "0 0 10px",
-};
-
-const SPEECH_COUNTS: Record<PartyId, string> = {
-  cdu: "187k",
-  spd: "164k",
-  grn: "118k",
-  fdp: "78k",
-  lnk: "62k",
-  afd: "94k",
-  csu: "54k",
-  bsw: "11k",
 };
 
 /** "2026-05-20" → "Q2 2026"; null → fallback string */
@@ -44,6 +39,8 @@ export function LeftRail() {
   const collapsed = useUI((s) => s.leftRailCollapsed);
   const toggle = useUI((s) => s.toggleLeftRail);
   const stats = useCorpusStats();
+  const availableWps = stats.data?.availableWps ?? [];
+  const speechesByParty = stats.data?.speechesByParty ?? {};
 
   const activeSet = new Set(filters.parties);
 
@@ -145,78 +142,29 @@ export function LeftRail() {
         <h4 style={SECTION_HEAD}>{m.leftrail_period()}</h4>
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
             fontFamily: "var(--font-mono)",
-            fontSize: 10.5,
+            fontSize: 11,
             color: "var(--ink-2)",
-            marginBottom: 8,
+            marginBottom: 4,
           }}
         >
-          <span>1990</span>
-          <span>2026</span>
-        </div>
-        <div style={{ position: "relative", height: 22 }}>
-          <div
-            style={{
-              position: "absolute",
-              top: 10,
-              left: 0,
-              right: 0,
-              height: 2,
-              background: "var(--hairline)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              top: 10,
-              left: "62%",
-              width: "30%",
-              height: 2,
-              background: "var(--accent)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              top: 6,
-              left: "62%",
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              background: "var(--accent)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              top: 6,
-              left: "92%",
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              background: "var(--accent)",
-            }}
-          />
+          {quarterLabel(stats.data?.earliestDate)} – {quarterLabel(stats.data?.latestDate)}
         </div>
         <div
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: 10,
             color: "var(--muted)",
-            marginTop: 6,
           }}
         >
-          {quarterLabel(stats.data?.earliestDate)} – {quarterLabel(stats.data?.latestDate)} ·{" "}
-          {formatGerman(stats.data?.totalSpeeches)} Reden
+          {formatGerman(stats.data?.totalSpeeches)} Reden im Korpus
         </div>
       </div>
 
       <div>
         <h4 style={SECTION_HEAD}>{m.leftrail_wahlperiode()}</h4>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
-          {PERIODS.map((p) => {
+          {PERIODS.filter((p) => availableWps.includes(p.id)).map((p) => {
             const on = filters.period === p.id;
             return (
               <button
@@ -284,31 +232,11 @@ export function LeftRail() {
                     color: "var(--muted)",
                   }}
                 >
-                  {SPEECH_COUNTS[p.id]}
+                  {compactCount(speechesByParty[p.id])}
                 </span>
               </button>
             );
           })}
-        </div>
-      </div>
-
-      <div>
-        <h4 style={SECTION_HEAD}>{m.leftrail_speaker()}</h4>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 10px",
-            background: "var(--bg-2)",
-            border: "1px solid var(--hairline)",
-            borderRadius: 5,
-          }}
-        >
-          <Icon name="search" size={12} color="var(--muted)" />
-          <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)" }}>
-            {m.leftrail_add_person()}
-          </span>
         </div>
       </div>
 

@@ -11,9 +11,7 @@ import { EmbeddingMap } from "@/components/viz/EmbeddingMap";
 import { PositioningScatter } from "@/components/viz/PositioningScatter";
 import { SankeyTimeline } from "@/components/viz/SankeyTimeline";
 import { Scattertext } from "@/components/viz/Scattertext";
-import { Sparkline } from "@/components/viz/Sparkline";
-import { MPS } from "@/data/mps";
-import { PARTIES } from "@/data/parties";
+import { PARTIES, type PartyId } from "@/data/parties";
 import { formatGerman, useCorpusStats } from "@/lib/hooks/useCorpusStats";
 import { getAtlasPoints } from "@/lib/server/atlas";
 import { getPositioning } from "@/lib/server/positioning";
@@ -31,7 +29,7 @@ export function Dashboard() {
   const params = useParams({ strict: false });
   const locale = (params.locale as string | undefined) ?? "de";
 
-  const [hoveredId, setHoveredId] = useState<string | null>("oezdemir");
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const [filters, setFilters] = useFilters();
   // Filter semantics:
@@ -86,12 +84,15 @@ export function Dashboard() {
   };
   const statsQuery = useCorpusStats();
   const openSpeechInspector = useUI((s) => s.openSpeechInspector);
+  const openSearchPalette = useUI((s) => s.openSearchPalette);
   const totalSpeechesLabel = formatGerman(statsQuery.data?.totalSpeeches);
   const newThisWeekLabel = formatGerman(statsQuery.data?.newThisWeek);
   const [hoveredW, setHoveredW] = useState<string | null>(null);
   const [sankeyMode, setSankeyMode] = useState<"sankey" | "stream">("sankey");
 
-  const hoveredMp = MPS.find((m) => m.id === hoveredId);
+  const hoveredMp = hoveredId
+    ? (positioningQuery.data?.mps.find((m) => m.extId === hoveredId) ?? null)
+    : null;
 
   return (
     <div
@@ -169,7 +170,9 @@ export function Dashboard() {
                   zIndex: 2,
                 }}
               >
-                <div
+                <button
+                  type="button"
+                  onClick={() => openSearchPalette()}
                   style={{
                     pointerEvents: "auto",
                     display: "flex",
@@ -180,19 +183,28 @@ export function Dashboard() {
                     background: "var(--panel)",
                     border: "1px solid var(--hairline)",
                     boxShadow: "var(--shadow-sm)",
+                    cursor: "pointer",
+                    color: "var(--ink-2)",
+                    fontFamily: "var(--font-sans)",
+                    fontSize: 12,
                   }}
                 >
                   <Icon name="search" size={12} color="var(--muted)" />
+                  Reden durchsuchen…
                   <span
                     style={{
-                      fontFamily: "var(--font-sans)",
-                      fontSize: 12,
-                      color: "var(--ink-2)",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      color: "var(--muted)",
+                      marginLeft: 6,
+                      padding: "1px 5px",
+                      border: "1px solid var(--hairline)",
+                      borderRadius: 3,
                     }}
                   >
-                    Reden zu „Migration" finden…
+                    ⌘K
                   </span>
-                </div>
+                </button>
                 {(statsQuery.data?.newThisWeek ?? 0) > 0 && (
                   <div
                     style={{
@@ -260,105 +272,6 @@ export function Dashboard() {
                     </div>
                   </div>
                 )}
-              </div>
-
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 22,
-                  left: 22,
-                  display: "flex",
-                  gap: 4,
-                  padding: "5px 6px",
-                  background: "var(--panel)",
-                  border: "1px solid var(--hairline)",
-                  borderRadius: 6,
-                }}
-              >
-                {["Kontinent", "Region", "Stadt"].map((z, i) => (
-                  <span
-                    key={z}
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 9.5,
-                      fontWeight: 600,
-                      padding: "4px 8px",
-                      borderRadius: 4,
-                      background: i === 0 ? "var(--ink)" : "transparent",
-                      color: i === 0 ? "var(--bg)" : "var(--muted)",
-                    }}
-                  >
-                    {z}
-                  </span>
-                ))}
-              </div>
-
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 22,
-                  right: 22,
-                  width: 280,
-                  padding: "12px 14px",
-                  background: "var(--panel)",
-                  border: "1px solid var(--hairline)",
-                  borderRadius: 6,
-                  boxShadow: "var(--shadow)",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    marginBottom: 6,
-                  }}
-                >
-                  <PartyDot id="grn" size={9} />
-                  <span
-                    style={{
-                      fontFamily: "var(--font-sans)",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "var(--ink)",
-                    }}
-                  >
-                    Robert Habeck
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 9.5,
-                      color: "var(--muted)",
-                    }}
-                  >
-                    Grüne
-                  </span>
-                </div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontFamily: "var(--font-serif)",
-                    fontSize: 13,
-                    fontStyle: "italic",
-                    lineHeight: 1.4,
-                    color: "var(--ink)",
-                  }}
-                >
-                  „Die Energiewende ist kein Projekt der Eliten — sie ist die Bedingung dafür, dass
-                  auch unsere Enkel hier noch leben können."
-                </p>
-                <div
-                  style={{
-                    marginTop: 8,
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 9.5,
-                    color: "var(--muted)",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  13. NOV 2024 · 198. SITZUNG · CLUSTER „ENERGIEWENDE"
-                </div>
               </div>
             </div>
           </div>
@@ -497,13 +410,8 @@ export function Dashboard() {
                 >
                   {hoveredMp ? (
                     <>
-                      <PartyDot id={hoveredMp.party} size={8} />
+                      <PartyDot id={hoveredMp.party as PartyId} size={8} />
                       <span style={{ fontWeight: 600, color: "var(--ink)" }}>{hoveredMp.name}</span>
-                      <Sparkline
-                        values={[0.78, 0.72, 0.65, 0.58, 0.52, 0.49, 0.47, 0.45]}
-                        width={70}
-                        height={18}
-                      />
                       <span
                         style={{
                           marginLeft: "auto",
@@ -512,7 +420,7 @@ export function Dashboard() {
                           color: "var(--muted)",
                         }}
                       >
-                        Kohäsion {hoveredMp.coh?.toFixed(2) ?? "—"} ▼
+                        ax={hoveredMp.ax.toFixed(2)} · {hoveredMp.n} Reden
                       </span>
                     </>
                   ) : (

@@ -6,7 +6,6 @@ import { TopBar } from "@/components/layout/TopBar";
 import { PartyDot } from "@/components/PartyDot";
 import { SpeechListItem } from "@/components/SpeechListItem";
 import { FingerprintGrid } from "@/components/viz/FingerprintGrid";
-import { type MP, MPS } from "@/data/mps";
 import { PARTY, type PartyId } from "@/data/parties";
 import { getSpeechesByMp, type MpProfile as MpProfileData } from "@/lib/server/directory";
 import { getMpDistinctivePhrases } from "@/lib/server/distinctive";
@@ -17,9 +16,7 @@ import { ProfileSection } from "./ProfileSection";
 import { Stat } from "./Stat";
 
 type Props = {
-  mpId: string;
-  /** Real MP record from DB, if URL resolved to a known extId. */
-  realProfile?: MpProfileData | null;
+  realProfile: MpProfileData;
 };
 
 function germanLong(iso: string | null): string {
@@ -34,75 +31,11 @@ function germanLong(iso: string | null): string {
   }).format(d);
 }
 
-const TRAJECTORY_POINTS: ReadonlyArray<readonly [number, number]> = [
-  [60, 160],
-  [120, 148],
-  [170, 132],
-  [220, 118],
-  [270, 106],
-  [320, 92],
-  [370, 82],
-  [410, 70],
-  [455, 76],
-  [490, 82],
-  [520, 72],
-  [540, 60],
-];
-
-type Deviation = {
-  topic: string;
-  to: string;
-  pct: number;
-  q: string | null;
-  neutral?: boolean;
-};
-
-const DEVIATIONS: readonly Deviation[] = [
-  {
-    topic: "Wirtschaft & Industrie",
-    to: "FDP",
-    pct: 22,
-    q: "„…wir brauchen private Investitionen, nicht weitere Subventionen.",
-  },
-  {
-    topic: "Versorgungssicherheit",
-    to: "CDU",
-    pct: 17,
-    q: "„…Resilienz unserer Lieferketten ist eine Frage nationaler Sicherheit.",
-  },
-  {
-    topic: "Außenpolitik",
-    to: "SPD",
-    pct: 14,
-    q: "„Diplomatie ist anstrengend — und sie ist alternativlos.",
-  },
-  {
-    topic: "Klimaschutz",
-    to: "(Median)",
-    pct: 0,
-    q: null,
-    neutral: true,
-  },
-];
-
-const DISTINCTIVE_PHRASES: ReadonlyArray<readonly [string, number]> = [
-  ["dramatische Notwendigkeit", 1.4],
-  ["Bedingung der Möglichkeit", 1.2],
-  ["Resilienz", 1.1],
-  ["fossile Pfadabhängigkeit", 1.4],
-  ["soziale Marktwirtschaft", 1.0],
-  ["zumutbar", 1.2],
-  ["wir alle wissen", 1.1],
-  ["wir tun das nicht aus Spaß", 1.3],
-  ["Versorgungssicherheit", 1.2],
-  ["es ist nicht einfach", 1.1],
-];
-
-function PartyLabel({ mp }: { mp: MP }) {
-  const p = PARTY[mp.party];
+function PartyLabel({ party }: { party: PartyId }) {
+  const p = PARTY[party];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-      <PartyDot id={mp.party} size={10} />
+      <PartyDot id={party} size={10} />
       <span
         style={{
           fontFamily: "var(--font-sans)",
@@ -117,58 +50,33 @@ function PartyLabel({ mp }: { mp: MP }) {
   );
 }
 
-export function MPProfile({ mpId, realProfile = null }: Props) {
-  const theme = useUI((s) => s.theme);
-  const dark = theme === "dark";
+export function MPProfile({ realProfile }: Props) {
   const openSpeechInspector = useUI((s) => s.openSpeechInspector);
 
-  const realExtId = realProfile?.extId ?? null;
+  const extId = realProfile.extId;
   const speechesQuery = useQuery({
-    queryKey: ["speeches-by-mp", realExtId],
-    queryFn: () => {
-      if (!realExtId) throw new Error("no extId");
-      return getSpeechesByMp({ data: realExtId });
-    },
-    enabled: realExtId !== null,
+    queryKey: ["speeches-by-mp", extId],
+    queryFn: () => getSpeechesByMp({ data: extId }),
   });
   const distinctiveQuery = useQuery({
-    queryKey: ["distinctive-phrases", realExtId],
-    queryFn: () => {
-      if (!realExtId) throw new Error("no extId");
-      return getMpDistinctivePhrases({ data: realExtId });
-    },
-    enabled: realExtId !== null,
+    queryKey: ["distinctive-phrases", extId],
+    queryFn: () => getMpDistinctivePhrases({ data: extId }),
   });
   const fingerprintQuery = useQuery({
-    queryKey: ["mp-fingerprint", realExtId],
-    queryFn: () => {
-      if (!realExtId) throw new Error("no extId");
-      return getMpFingerprints({ data: { topN: 1, extId: realExtId } });
-    },
-    enabled: realExtId !== null,
+    queryKey: ["mp-fingerprint", extId],
+    queryFn: () => getMpFingerprints({ data: { topN: 1, extId } }),
   });
 
-  // Mock MP used for the right-column charts (trajectory, cohesion, deviations,
-  // distinctive phrases) — those need full-corpus analytics we don't have yet.
-  // The left column shows real data when realProfile is present.
-  const mockMp = MPS.find((m) => m.id === mpId) ?? MPS[2];
-  if (!mockMp) return null;
+  const displayName = realProfile.name;
+  const displayParty = realProfile.party as PartyId;
+  const displayRole = realProfile.role;
+  const displaySince = realProfile.since;
+  const displaySpeechCount = realProfile.totalSpeeches;
+  const displayFirstSpeech = germanLong(realProfile.firstSpeechDate);
+  const displayLastSpeech = germanLong(realProfile.lastSpeechDate);
 
-  // Display values: real data overrides mock when present.
-  const displayName = realProfile?.name ?? mockMp.name;
-  const displayParty = ((realProfile?.party as PartyId | undefined) ?? mockMp.party) as PartyId;
-  const displayRole = realProfile?.role ?? mockMp.role;
-  const displaySince = realProfile?.since ?? mockMp.since;
-  const displaySpeechCount = realProfile?.totalSpeeches ?? mockMp.n;
-  const displayFirstSpeech = realProfile?.firstSpeechDate
-    ? germanLong(realProfile.firstSpeechDate)
-    : "14. März 2018";
-  const displayLastSpeech = realProfile?.lastSpeechDate
-    ? germanLong(realProfile.lastSpeechDate)
-    : "08. Mai 2026";
-
-  const mp: MP = { ...mockMp, name: displayName, party: displayParty };
   const [first, last] = displayName.split(" ");
+  const fingerprintMp = fingerprintQuery.data?.mps[0];
 
   return (
     <div
@@ -236,7 +144,7 @@ export function MPProfile({ mpId, realProfile = null }: Props) {
               </span>
             </div>
 
-            <PartyLabel mp={mp} />
+            <PartyLabel party={displayParty} />
             <h1
               style={{
                 fontFamily: "var(--font-serif)",
@@ -280,12 +188,6 @@ export function MPProfile({ mpId, realProfile = null }: Props) {
               <Stat label="Reden gesamt" value={displaySpeechCount.toString()} />
               <Stat label="Erste Rede" value={displayFirstSpeech} />
               <Stat label="Letzte Rede" value={displayLastSpeech} />
-              <Stat label="Ø Redelänge" value="6:42 min" />
-              <Stat
-                label={`Kohäsion · ${PARTY[mp.party].name}`}
-                value={mp.coh?.toFixed(2) ?? "—"}
-                hint={mp.coh && mp.coh > 0.75 ? "Hoch — auf Linie" : undefined}
-              />
             </div>
 
             <a
@@ -310,275 +212,59 @@ export function MPProfile({ mpId, realProfile = null }: Props) {
 
           {/* Right column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
-            {realExtId && (
+            <ProfileSection
+              title="Alle Reden"
+              eyebrow={`${speechesQuery.data?.length ?? "—"} Reden im Korpus`}
+              hint="Chronologisch absteigend. Klick öffnet die vollständige Rede."
+            >
+              {speechesQuery.isPending && (
+                <div style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0" }}>
+                  Lade Reden…
+                </div>
+              )}
+              {speechesQuery.data && speechesQuery.data.length === 0 && (
+                <div style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0" }}>
+                  Keine Reden im Korpus.
+                </div>
+              )}
+              {speechesQuery.data && speechesQuery.data.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {speechesQuery.data.map((s) => (
+                    <SpeechListItem
+                      key={s.id}
+                      speech={s}
+                      showSpeaker={false}
+                      onSelect={openSpeechInspector}
+                    />
+                  ))}
+                </div>
+              )}
+            </ProfileSection>
+
+            {fingerprintQuery.data && fingerprintMp && fingerprintMp.quarters.length >= 2 && (
               <ProfileSection
-                title="Alle Reden"
-                eyebrow={`${speechesQuery.data?.length ?? "—"} Reden im Korpus`}
-                hint="Chronologisch absteigend. Klick öffnet die vollständige Rede."
+                title="Sprachprofil"
+                eyebrow={`5 Merkmale × ${fingerprintMp.quarters.length} Quartale`}
+                hint="Heatmap: pro Quartal Satzlänge, Lexikon, Emotionalität, Formalität und Abweichung von der eigenen Fraktion."
+                ki
               >
-                {speechesQuery.isPending && (
-                  <div style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0" }}>
-                    Lade Reden…
-                  </div>
-                )}
-                {speechesQuery.data && speechesQuery.data.length === 0 && (
-                  <div style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0" }}>
-                    Keine Reden im Korpus.
-                  </div>
-                )}
-                {speechesQuery.data && speechesQuery.data.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {speechesQuery.data.map((s) => (
-                      <SpeechListItem
-                        key={s.id}
-                        speech={s}
-                        showSpeaker={false}
-                        onSelect={openSpeechInspector}
-                      />
-                    ))}
-                  </div>
-                )}
+                <FingerprintGrid width={660} realData={fingerprintQuery.data} columns={1} />
               </ProfileSection>
             )}
 
-            {realExtId &&
-              fingerprintQuery.data &&
-              fingerprintQuery.data.mps.length > 0 &&
-              fingerprintQuery.data.mps[0] &&
-              fingerprintQuery.data.mps[0].quarters.length >= 2 && (
-                <ProfileSection
-                  title="Sprachprofil"
-                  eyebrow={`5 Merkmale × ${fingerprintQuery.data.mps[0].quarters.length} Quartale`}
-                  hint="Heatmap: pro Quartal Satzlänge, Lexikon, Emotionalität, Formalität und Abweichung von der eigenen Fraktion."
-                  ki
-                >
-                  <FingerprintGrid width={660} realData={fingerprintQuery.data} columns={1} />
-                </ProfileSection>
-              )}
-
-            {realExtId && (
-              <InsufficientDataFrame
-                speechCount={realProfile?.totalSpeeches ?? 0}
-                threshold={10}
-                mpName={displayName}
-              />
-            )}
-
-            {!realExtId && (
-              <>
-                <ProfileSection
-                  title="Trajektorie im semantischen Raum"
-                  eyebrow={`Embedding · ${mp.since} → 2026`}
-                  hint="Quartalsweiser Verlauf der Reden, projiziert. Annotiert: thematische Wendepunkte."
-                  ki
-                >
-                  <div
-                    style={{
-                      position: "relative",
-                      height: 220,
-                      background: "var(--map-bg)",
-                      borderRadius: 4,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <svg
-                      viewBox="0 0 600 220"
-                      width="100%"
-                      height="220"
-                      preserveAspectRatio="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M 60 160 C 120 140, 180 130, 240 110 S 360 80, 410 70 S 510 90, 540 60"
-                        stroke={PARTY[mp.party].colorVar}
-                        strokeWidth="1.6"
-                        fill="none"
-                        strokeOpacity="0.85"
-                      />
-                      {TRAJECTORY_POINTS.map(([cx, cy], i) => (
-                        <circle
-                          // biome-ignore lint/suspicious/noArrayIndexKey: stable static positions
-                          key={i}
-                          cx={cx}
-                          cy={cy}
-                          r={i === 7 ? 5 : 2.6}
-                          fill={PARTY[mp.party].colorVar}
-                          stroke={i === 7 ? (dark ? "#0e1014" : "#fff") : "none"}
-                          strokeWidth={i === 7 ? 1.5 : 0}
-                        />
-                      ))}
-                      <line
-                        x1="410"
-                        y1="70"
-                        x2="410"
-                        y2="34"
-                        stroke="var(--muted)"
-                        strokeDasharray="2 3"
-                      />
-                      <text
-                        x="412"
-                        y="28"
-                        fontFamily="var(--font-sans)"
-                        fontSize="10.5"
-                        fontWeight="600"
-                        fill="var(--ink)"
-                      >
-                        Energiekrise · 2022
-                      </text>
-                      <text
-                        x="412"
-                        y="42"
-                        fontFamily="var(--font-sans)"
-                        fontSize="10"
-                        fill="var(--muted)"
-                      >
-                        Pivot Richtung Versorgungssicherheit
-                      </text>
-                    </svg>
-                  </div>
-                </ProfileSection>
-
-                <ProfileSection
-                  title="Kohäsion über Zeit"
-                  eyebrow="Übereinstimmung mit eigener Fraktion"
-                  hint="Werte: 1.0 = volle rhetorische Übereinstimmung mit dem Median der Fraktion."
-                >
-                  <div style={{ height: 90, position: "relative" }}>
-                    <svg
-                      viewBox="0 0 600 90"
-                      width="100%"
-                      height="90"
-                      preserveAspectRatio="none"
-                      aria-hidden="true"
-                    >
-                      <line x1="0" y1="40" x2="600" y2="40" stroke="var(--hairline)" />
-                      <text
-                        x="2"
-                        y="14"
-                        fontFamily="var(--font-mono)"
-                        fontSize="9"
-                        fill="var(--muted)"
-                      >
-                        1.0
-                      </text>
-                      <text
-                        x="2"
-                        y="86"
-                        fontFamily="var(--font-mono)"
-                        fontSize="9"
-                        fill="var(--muted)"
-                      >
-                        0.5
-                      </text>
-                      <path
-                        d="M 30 38 L 80 30 L 130 24 L 180 22 L 230 18 L 280 16 L 330 14 L 380 22 L 430 30 L 480 26 L 530 22 L 580 18"
-                        stroke={PARTY[mp.party].colorVar}
-                        strokeWidth="1.6"
-                        fill="none"
-                      />
-                      <path
-                        d="M 30 38 L 80 30 L 130 24 L 180 22 L 230 18 L 280 16 L 330 14 L 380 22 L 430 30 L 480 26 L 530 22 L 580 18 L 580 88 L 30 88 Z"
-                        fill={PARTY[mp.party].colorVar}
-                        opacity="0.10"
-                      />
-                    </svg>
-                  </div>
-                </ProfileSection>
-
-                <ProfileSection
-                  title="Charakteristische Abweichungen"
-                  eyebrow="Wo seine Sprache von der Fraktion abweicht"
-                  ki
-                >
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    {DEVIATIONS.map((d) => (
-                      <div
-                        key={d.topic}
-                        style={{
-                          padding: "10px 12px",
-                          border: "1px solid var(--hairline)",
-                          borderRadius: 4,
-                          background: d.neutral ? "transparent" : "var(--panel-2)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "baseline",
-                            marginBottom: 4,
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontFamily: "var(--font-sans)",
-                              fontSize: 12,
-                              fontWeight: 600,
-                              color: "var(--ink)",
-                            }}
-                          >
-                            {d.topic}
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: "var(--font-mono)",
-                              fontSize: 10.5,
-                              color: d.neutral ? "var(--muted)" : "var(--accent)",
-                            }}
-                          >
-                            {d.neutral ? "auf Linie" : `+${d.pct} % Richtung ${d.to}`}
-                          </span>
-                        </div>
-                        {d.q && (
-                          <div
-                            style={{
-                              fontFamily: "var(--font-serif)",
-                              fontSize: 12,
-                              fontStyle: "italic",
-                              color: "var(--ink-2)",
-                              lineHeight: 1.4,
-                            }}
-                          >
-                            {d.q}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </ProfileSection>
-              </>
-            )}
+            <InsufficientDataFrame
+              speechCount={displaySpeechCount}
+              threshold={10}
+              mpName={displayName}
+            />
 
             <ProfileSection
               title="Charakteristische Wendungen"
               eyebrow="Log-Odds-Ratio mit Dirichlet-Prior"
-              hint={`Wörter, die ${last ?? mp.name} signifikant häufiger nutzt als der Bundestag insgesamt.`}
+              hint={`Wörter, die ${last ?? displayName} signifikant häufiger nutzt als der Bundestag insgesamt.`}
               ki
             >
               {(() => {
-                if (!realExtId) {
-                  return (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      {DISTINCTIVE_PHRASES.map(([w, s]) => (
-                        <span
-                          key={w}
-                          style={{
-                            fontFamily: "var(--font-sans)",
-                            fontSize: 12 * s,
-                            fontWeight: 500,
-                            padding: "4px 10px",
-                            border: "1px solid var(--hairline)",
-                            borderRadius: 12,
-                            background: "var(--bg-2)",
-                            color: "var(--ink)",
-                          }}
-                        >
-                          {w}
-                        </span>
-                      ))}
-                    </div>
-                  );
-                }
                 if (distinctiveQuery.isPending) {
                   return <div style={{ color: "var(--muted)", fontSize: 13 }}>Berechne…</div>;
                 }
@@ -590,7 +276,6 @@ export function MPProfile({ mpId, realProfile = null }: Props) {
                     </div>
                   );
                 }
-                // Normalise weight (z-score) to a font-size multiplier.
                 const maxWeight = Math.max(...phrases.map((p) => p.weight));
                 return (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>

@@ -21,8 +21,7 @@ async function main(): Promise<void> {
     ORDER BY s.wahlperiode, sp.topic_id
   `);
   process.stdout.write("\n=== topic flows (raw) ===\n");
-  for (const r of flows.rows)
-    process.stdout.write(`  WP${r.wahlperiode}  ${r.topic_id}  ${r.n}\n`);
+  for (const r of flows.rows) process.stdout.write(`  WP${r.wahlperiode}  ${r.topic_id}  ${r.n}\n`);
 
   // Fingerprint smoke test — top-3 MPs.
   const rows = await db.execute<{
