@@ -75,7 +75,12 @@ export function MPProfile({ realProfile }: Props) {
   const displayFirstSpeech = germanLong(realProfile.firstSpeechDate);
   const displayLastSpeech = germanLong(realProfile.lastSpeechDate);
 
-  const [first, last] = displayName.split(" ");
+  // Split on whitespace; surname = last token, everything before = titles + given names.
+  // Handles "Friedrich Merz" → ["Friedrich", "Merz"] and
+  // "Dr. Dr. Zanda Grundberg" → ["Dr. Dr. Zanda", "Grundberg"].
+  const nameParts = displayName.trim().split(/\s+/);
+  const surname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
+  const givens = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : displayName;
   const fingerprintMp = fingerprintQuery.data?.mps[0];
 
   return (
@@ -155,11 +160,11 @@ export function MPProfile({ realProfile }: Props) {
                 lineHeight: 1.05,
               }}
             >
-              {first}
-              {last && (
+              {givens}
+              {surname && (
                 <>
                   <br />
-                  {last}
+                  {surname}
                 </>
               )}
             </h1>
@@ -261,7 +266,7 @@ export function MPProfile({ realProfile }: Props) {
             <ProfileSection
               title="Charakteristische Wendungen"
               eyebrow="Log-Odds-Ratio mit Dirichlet-Prior"
-              hint={`Wörter, die ${last ?? displayName} signifikant häufiger nutzt als der Bundestag insgesamt.`}
+              hint={`Wörter, die ${surname ?? displayName} signifikant häufiger nutzt als der Bundestag insgesamt.`}
               ki
             >
               {(() => {
