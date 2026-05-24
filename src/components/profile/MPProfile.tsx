@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Icon } from "@/components/Icon";
 import { BottomStrip } from "@/components/layout/BottomStrip";
 import { LeftRail } from "@/components/layout/LeftRail";
@@ -7,7 +8,11 @@ import { PartyDot } from "@/components/PartyDot";
 import { SpeechListItem } from "@/components/SpeechListItem";
 import { FingerprintGrid } from "@/components/viz/FingerprintGrid";
 import { PARTY, type PartyId } from "@/data/parties";
-import { getSpeechesByMp, type MpProfile as MpProfileData } from "@/lib/server/directory";
+import {
+  getSpeechesByMp,
+  type MpPhoto as MpPhotoData,
+  type MpProfile as MpProfileData,
+} from "@/lib/server/directory";
 import { getMpDistinctivePhrases } from "@/lib/server/distinctive";
 import { getMpFingerprints } from "@/lib/server/fingerprint";
 import { useUI } from "@/state/ui";
@@ -29,6 +34,157 @@ function germanLong(iso: string | null): string {
     year: "numeric",
     timeZone: "UTC",
   }).format(d);
+}
+
+function MpPhoto({ photo, alt }: { photo: MpPhotoData | null; alt: string }) {
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
+
+  // Placeholder silhouette (no photo, or load error).
+  if (!photo || errored) {
+    return (
+      <div
+        style={{
+          width: 200,
+          height: 240,
+          background: "linear-gradient(180deg, var(--bg-2), var(--panel))",
+          border: "1px solid var(--hairline)",
+          borderRadius: 4,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 12,
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <svg viewBox="0 0 100 120" width="120" height="144" aria-hidden="true">
+          <circle cx="50" cy="42" r="20" fill="var(--hairline)" />
+          <path d="M14 120 C 14 80 86 80 86 120 Z" fill="var(--hairline)" />
+        </svg>
+        <span
+          style={{
+            position: "absolute",
+            bottom: 6,
+            left: 8,
+            fontFamily: "var(--font-mono)",
+            fontSize: 9,
+            color: "var(--muted)",
+          }}
+        >
+          Foto: Wikidata, sofern lizenziert
+        </span>
+      </div>
+    );
+  }
+
+  const sizedUrl = `${photo.url}?width=400`;
+
+  return (
+    <div
+      style={{
+        width: 200,
+        height: 240,
+        background: "var(--bg-2)",
+        border: "1px solid var(--hairline)",
+        borderRadius: 4,
+        marginBottom: 12,
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <img
+        src={sizedUrl}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        onError={() => setErrored(true)}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center 25%",
+          opacity: loaded ? 1 : 0,
+          transition: "opacity 200ms ease-out",
+        }}
+      />
+
+      <button
+        type="button"
+        aria-label="Bildquelle anzeigen"
+        onClick={() => setPopoverOpen((v) => !v)}
+        onMouseEnter={() => setPopoverOpen(true)}
+        onMouseLeave={() => setPopoverOpen(false)}
+        style={{
+          position: "absolute",
+          top: 6,
+          right: 6,
+          width: 22,
+          height: 22,
+          borderRadius: "50%",
+          background: "rgba(20,18,12,0.55)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          color: "rgba(255,255,255,0.9)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+          fontFamily: "var(--font-mono)",
+          fontSize: 11,
+          fontWeight: 600,
+        }}
+      >
+        i
+      </button>
+
+      {popoverOpen && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 6,
+            left: 6,
+            right: 6,
+            padding: "7px 9px",
+            background: "rgba(20,18,12,0.86)",
+            color: "rgba(255,255,255,0.92)",
+            borderRadius: 4,
+            fontFamily: "var(--font-sans)",
+            fontSize: 10.5,
+            lineHeight: 1.35,
+            backdropFilter: "blur(2px)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
+        >
+          {photo.attribution && (
+            <span>
+              <span style={{ color: "rgba(255,255,255,0.55)" }}>Foto: </span>
+              {photo.attribution}
+            </span>
+          )}
+          {photo.license && (
+            <span style={{ color: "rgba(255,255,255,0.75)" }}>{photo.license}</span>
+          )}
+          {photo.attributionUrl && (
+            <a
+              href={photo.attributionUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              style={{
+                color: "var(--accent)",
+                textDecoration: "none",
+                marginTop: 2,
+              }}
+            >
+              Quelle auf Commons →
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function PartyLabel({ party }: { party: PartyId }) {
@@ -113,41 +269,7 @@ export function MPProfile({ realProfile }: Props) {
         >
           {/* Header column */}
           <div>
-            <div
-              style={{
-                width: 200,
-                height: 240,
-                background: "linear-gradient(180deg, var(--bg-2), var(--panel))",
-                border: "1px solid var(--hairline)",
-                borderRadius: 4,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "var(--font-sans)",
-                fontSize: 11,
-                color: "var(--muted)",
-                marginBottom: 12,
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              <svg viewBox="0 0 100 120" width="120" height="144" aria-hidden="true">
-                <circle cx="50" cy="42" r="20" fill="var(--hairline)" />
-                <path d="M14 120 C 14 80 86 80 86 120 Z" fill="var(--hairline)" />
-              </svg>
-              <span
-                style={{
-                  position: "absolute",
-                  bottom: 6,
-                  left: 8,
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 9,
-                  color: "var(--muted)",
-                }}
-              >
-                Foto: Wikidata, sofern lizenziert
-              </span>
-            </div>
+            <MpPhoto photo={realProfile.photo} alt={displayName} />
 
             <PartyLabel party={displayParty} />
             <h1

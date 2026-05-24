@@ -40,6 +40,14 @@ export const mps = pgTable(
     party: partyEnum("party").notNull(),
     role: text("role"),
     since: smallint("since"),
+    /** Commons Special:FilePath URL — append ?width=N for resized variants. */
+    photoUrl: text("photo_url"),
+    /** Plain-text author (e.g. "Sandro Halank"). */
+    photoAttribution: text("photo_attribution"),
+    /** Commons file page (https://commons.wikimedia.org/wiki/File:...). */
+    photoAttributionUrl: text("photo_attribution_url"),
+    /** License short name (e.g. "CC BY-SA 4.0"). */
+    photoLicense: text("photo_license"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [uniqueIndex("mps_ext_id_idx").on(t.extId)],

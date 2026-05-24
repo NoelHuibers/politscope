@@ -11,6 +11,14 @@ export type TopMp = {
   speechCount: number;
 };
 
+export type MpPhoto = {
+  /** Commons Special:FilePath URL — append ?width=N for sized variants. */
+  url: string;
+  attribution: string | null;
+  attributionUrl: string | null;
+  license: string | null;
+};
+
 export type MpProfile = {
   id: string;
   extId: string;
@@ -21,6 +29,7 @@ export type MpProfile = {
   totalSpeeches: number;
   firstSpeechDate: string | null;
   lastSpeechDate: string | null;
+  photo: MpPhoto | null;
 };
 
 export type RecentSession = {
@@ -95,8 +104,13 @@ export const getMpByExtId = createServerFn({ method: "GET" })
       total_speeches: string;
       first_date: string | null;
       last_date: string | null;
+      photo_url: string | null;
+      photo_attribution: string | null;
+      photo_attribution_url: string | null;
+      photo_license: string | null;
     }>(sql`
       SELECT m.id::text AS id, m.ext_id, m.name, m.party::text AS party, m.role, m.since,
+             m.photo_url, m.photo_attribution, m.photo_attribution_url, m.photo_license,
              count(s.id)::text AS total_speeches,
              min(se.date)::text AS first_date,
              max(se.date)::text AS last_date
@@ -120,6 +134,14 @@ export const getMpByExtId = createServerFn({ method: "GET" })
       totalSpeeches: Number(row.total_speeches),
       firstSpeechDate: row.first_date,
       lastSpeechDate: row.last_date,
+      photo: row.photo_url
+        ? {
+            url: row.photo_url,
+            attribution: row.photo_attribution,
+            attributionUrl: row.photo_attribution_url,
+            license: row.photo_license,
+          }
+        : null,
     };
   });
 
