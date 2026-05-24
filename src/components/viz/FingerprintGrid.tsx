@@ -1,5 +1,4 @@
 import { Link, useParams } from "@tanstack/react-router";
-import { type MP, MPS } from "@/data/mps";
 import { PARTY, type PartyId } from "@/data/parties";
 import type { FingerprintMp, FingerprintResponse } from "@/lib/server/fingerprint";
 
@@ -7,9 +6,7 @@ type Props = {
   width?: number;
   height?: number;
   dark?: boolean;
-  mps?: readonly MP[];
-  /** When provided, renders real per-quarter features instead of mock noise. */
-  realData?: FingerprintResponse | null;
+  realData: FingerprintResponse;
   /** Number of columns in the grid. Default 4. Use 1 for single-MP profile view. */
   columns?: number;
 };
@@ -41,65 +38,27 @@ type Row = {
   axis: string[];
 };
 
-function pseudoRandomCells(mi: number): (number | null)[][] {
-  const PERIODS_QUARTERS = 16;
-  return FEATURES.map((_, fi) => {
-    const arr: (number | null)[] = [];
-    let v = 0.5;
-    for (let i = 0; i < PERIODS_QUARTERS; i++) {
-      const seed = (mi * 17 + fi * 31 + i * 7) % 233;
-      v = Math.max(0.05, Math.min(0.95, v + ((seed % 100) / 100 - 0.5) * 0.18));
-      arr.push(v);
-    }
-    return arr;
-  });
-}
-
-function realCellsFor(
-  mp: FingerprintMp,
-  axis: string[],
-): { cells: (number | null)[][]; rangeLabel: string } {
+function realCellsFor(mp: FingerprintMp, axis: string[]): (number | null)[][] {
   // For each feature, build an array aligned with the global quarter axis.
   // Quarters where the MP didn't speak are `null` (rendered as empty).
   const byQ = new Map(mp.quarters.map((q) => [q.q, q]));
-  const cells = FEATURES.map(({ key }) => {
+  return FEATURES.map(({ key }) => {
     const k = key as FeatureKey;
     return axis.map((q) => byQ.get(q)?.features[k] ?? null);
   });
-  const first = mp.quarters[0]?.q;
-  const last = mp.quarters[mp.quarters.length - 1]?.q;
-  const rangeLabel = first && last ? `${first} → ${last}` : "";
-  return { cells, rangeLabel };
 }
 
-export function FingerprintGrid({ width = 660, mps, realData = null, columns = 4 }: Props) {
+export function FingerprintGrid({ width = 660, realData, columns = 4 }: Props) {
   const params = useParams({ strict: false });
   const locale = (params.locale as string | undefined) ?? "de";
 
-  // Decide what to render. Real data uses ext-ids; mock uses MP.id slugs.
-  const useReal = realData !== null && realData.mps.length > 0;
-  const list: readonly MP[] = useReal
-    ? []
-    : (mps ?? MPS.filter((m) => m.note !== "thin").slice(0, 8));
-
-  const rows: Row[] = useReal
-    ? realData.mps.map((m) => {
-        const { cells } = realCellsFor(m, realData.axis);
-        return {
-          id: m.extId,
-          name: m.name,
-          party: m.party as PartyId,
-          cells,
-          axis: realData.axis,
-        };
-      })
-    : list.map((m, i) => ({
-        id: m.id,
-        name: m.name,
-        party: m.party,
-        cells: pseudoRandomCells(i),
-        axis: Array.from({ length: 16 }).map((_, k) => `Q${k + 1}`),
-      }));
+  const rows: Row[] = realData.mps.map((m) => ({
+    id: m.extId,
+    name: m.name,
+    party: m.party as PartyId,
+    cells: realCellsFor(m, realData.axis),
+    axis: realData.axis,
+  }));
 
   const tile = { w: width / columns - 8, h: columns === 1 ? 160 : 76 };
 

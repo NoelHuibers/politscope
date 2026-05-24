@@ -1,4 +1,3 @@
-import { MPS } from "@/data/mps";
 import { PARTY, type PartyId } from "@/data/parties";
 import { PartyDotSvg } from "./PartyDotSvg";
 
@@ -61,23 +60,15 @@ export function PositioningScatter({
   const B = PARTY[axisB];
   const axisColor = dark ? "rgba(255,255,250,0.20)" : "rgba(20,18,12,0.18)";
 
-  const eligible: MpRow[] = realMps
-    ? realMps.map((m) => ({
-        id: m.extId,
-        name: m.name,
-        party: m.party as PartyId,
-        ax: m.ax,
-        ay: m.ay,
-        isOutlier: m.isOutlier,
-      }))
-    : MPS.filter((m) => m.note !== "thin").map((m) => ({
-        id: m.id,
-        name: m.name,
-        party: m.party,
-        ax: m.ax,
-        ay: m.ay,
-        isOutlier: m.note === "outlier",
-      }));
+  const eligible: MpRow[] = (realMps ?? []).map((m) => ({
+    id: m.extId,
+    name: m.name,
+    party: m.party as PartyId,
+    ax: m.ax,
+    ay: m.ay,
+    isOutlier: m.isOutlier,
+  }));
+  const isLoading = realMps === null;
 
   return (
     <svg
@@ -222,6 +213,20 @@ export function PositioningScatter({
             {m.name.split(" ").slice(-1)[0]}
           </text>
         ))}
+
+      {isLoading && (
+        <text
+          x={W / 2}
+          y={H / 2}
+          textAnchor="middle"
+          fontFamily="var(--font-mono)"
+          fontSize={10}
+          fill="var(--muted)"
+          style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}
+        >
+          Lade Positionierung …
+        </text>
+      )}
     </svg>
   );
 }

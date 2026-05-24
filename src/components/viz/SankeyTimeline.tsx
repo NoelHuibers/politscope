@@ -1,6 +1,3 @@
-import { PERIODS } from "@/data/periods";
-import { TOPIC_FLOWS, TOPICS, type TopicId } from "@/data/topics";
-
 /** Real-data shape matching `TopicFlowsResponse` from src/lib/server/topic-flows.ts. */
 export type RealTopicFlows = {
   periods: { id: number; label: string; total: number }[];
@@ -13,25 +10,8 @@ type Props = {
   dark?: boolean;
   mode?: "sankey" | "stream";
   highlightTopicId?: string | null;
-  /** When provided, renders real WP-share data instead of the mock TOPIC_FLOWS. */
+  /** WP-share data from getTopicFlows; null = still loading. */
   realFlows?: RealTopicFlows | null;
-};
-
-const MOCK_PALETTE: Record<TopicId, string> = {
-  wirt: "var(--color-seq-2)",
-  soz: "var(--color-seq-3)",
-  auss: "var(--color-seq-5)",
-  haus: "var(--color-seq-1)",
-  umw: "#4a8a2c",
-  mig: "var(--accent)",
-  vert: "var(--color-seq-4)",
-  eu: "var(--color-seq-5)",
-  ges: "#b1d3c7",
-  just: "var(--color-seq-3)",
-  bil: "#d6cfb8",
-  dig: "#b3d8e8",
-  verk: "#cbd0a4",
-  land: "#d8c98a",
 };
 
 /** Stable palette for real cluster-N IDs — same colors as the atlas legend. */
@@ -72,42 +52,20 @@ export function SankeyTimeline({
   const innerW = W - pad.l - pad.r;
   const innerH = H - pad.t - pad.b;
 
-  // Build a unified (Band[], Period[]) view that works for both real + mock.
-  let periods: PeriodCol[];
-  let bands: Band[];
-  if (realFlows && realFlows.bands.length > 0 && realFlows.periods.length > 0) {
-    periods = realFlows.periods.map((p) => ({ id: p.id, label: p.label }));
-    bands = realFlows.bands
-      .map((b) => ({
-        topicId: b.topicId,
-        label: b.label,
-        series: [...b.counts],
-        color: clusterColor(b.topicId),
-      }))
-      .sort((a, b) => {
-        const as = a.series.reduce((s, v) => s + v, 0);
-        const bs = b.series.reduce((s, v) => s + v, 0);
-        return bs - as;
-      });
-  } else {
-    periods = PERIODS.map((p) => ({ id: p.id, label: p.label }));
-    const mockTopicLabel = Object.fromEntries(TOPICS.map((t) => [t.id, t.label])) as Record<
-      TopicId,
-      string
-    >;
-    bands = (Object.keys(TOPIC_FLOWS) as TopicId[])
-      .map((tid) => ({
-        topicId: tid,
-        label: mockTopicLabel[tid] ?? tid,
-        series: [...TOPIC_FLOWS[tid]],
-        color: MOCK_PALETTE[tid],
-      }))
-      .sort((a, b) => {
-        const as = a.series.reduce((s, v) => s + v, 0);
-        const bs = b.series.reduce((s, v) => s + v, 0);
-        return bs - as;
-      });
-  }
+  const isLoading = realFlows === null;
+  const periods: PeriodCol[] = realFlows?.periods.map((p) => ({ id: p.id, label: p.label })) ?? [];
+  const bands: Band[] = (realFlows?.bands ?? [])
+    .map((b) => ({
+      topicId: b.topicId,
+      label: b.label,
+      series: [...b.counts],
+      color: clusterColor(b.topicId),
+    }))
+    .sort((a, b) => {
+      const as = a.series.reduce((s, v) => s + v, 0);
+      const bs = b.series.reduce((s, v) => s + v, 0);
+      return bs - as;
+    });
 
   const nP = periods.length;
   const xAt = (i: number) => (nP === 1 ? pad.l + innerW / 2 : pad.l + (i / (nP - 1)) * innerW);
@@ -236,6 +194,20 @@ export function SankeyTimeline({
             return <path key={b.topicId} d={d} fill={b.color} opacity={op} />;
           })}
         </g>
+      )}
+
+      {isLoading && (
+        <text
+          x={W / 2}
+          y={H / 2}
+          textAnchor="middle"
+          fontFamily="var(--font-mono)"
+          fontSize={10}
+          fill="var(--muted)"
+          style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}
+        >
+          Lade Themenfluss …
+        </text>
       )}
     </svg>
   );

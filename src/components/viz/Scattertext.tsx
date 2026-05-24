@@ -1,5 +1,4 @@
 import { PARTY, type PartyId } from "@/data/parties";
-import { SCATTER_WORDS } from "@/data/scatter-words";
 
 const noop = (_w: string | null): void => undefined;
 
@@ -21,7 +20,7 @@ type Props = {
   partyB?: PartyId;
   hoveredW?: string | null;
   onHover?: (w: string | null) => void;
-  /** When provided, renders LOR words instead of the mock SCATTER_WORDS. */
+  /** LOR words from getScattertext; null = still loading. */
   realWords?: ScatterRealWord[] | null;
 };
 
@@ -49,10 +48,8 @@ export function Scattertext({
   const B = PARTY[partyB];
   const axisColor = dark ? "rgba(255,255,250,0.20)" : "rgba(20,18,12,0.18)";
 
-  // Unified data shape. Convention: x > 0 → partyA, x < 0 → partyB.
-  const rows: Row[] = realWords
-    ? realWords.map((r) => ({ w: r.word, x: r.x, f: r.f }))
-    : SCATTER_WORDS.map((s) => ({ w: s.w, x: s.x, f: s.f }));
+  const rows: Row[] = (realWords ?? []).map((r) => ({ w: r.word, x: r.x, f: r.f }));
+  const isLoading = realWords === null;
 
   return (
     <svg
@@ -181,6 +178,20 @@ export function Scattertext({
           );
         });
       })()}
+
+      {isLoading && (
+        <text
+          x={W / 2}
+          y={H / 2}
+          textAnchor="middle"
+          fontFamily="var(--font-mono)"
+          fontSize={10}
+          fill="var(--muted)"
+          style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}
+        >
+          Lade Wortvergleich …
+        </text>
+      )}
     </svg>
   );
 }
