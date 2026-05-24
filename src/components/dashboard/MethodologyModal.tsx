@@ -1,40 +1,87 @@
+import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@/components/Icon";
 import { ModalFrame } from "@/components/ModalFrame";
+import { formatGerman } from "@/lib/hooks/useCorpusStats";
+import { getMethodology, type MethodologyData } from "@/lib/server/methodology";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-const STEPS = [
-  {
-    eb: "1 · Datenquelle",
-    t: "Bundestag · Open Data",
-    d: "Plenarprotokolle 1990–2026, ~1,25 Mio. Reden. Tägliche Aktualisierung 23:00 UTC. Exakte Snapshots ab Dezember 2024.",
-  },
-  {
-    eb: "2 · Embedding",
-    t: "Multilingual sentence-transformer",
-    d: "Modell: deutscher Roberta-Encoder (768 dim), reduziert auf 2D mit UMAP (n_neighbors=30, min_dist=0.05). Modell-Updates werden versioniert.",
-  },
-  {
-    eb: "3 · Cluster-Labels",
-    t: "KI-generiert, manuell stichprobenartig kuratiert",
-    d: "HDBSCAN-Clustering, Beschriftung über Top-c-tf-idf + LLM-Zusammenfassung. Jedes Label ist mit „KI-generiert“ markiert und enthält N-Beispiele.",
-  },
-  {
-    eb: "4 · Sprecherpositionierung",
-    t: "Kosinus-Distanz zu Fraktionsmedianen",
-    d: "Pro Thema und Sprecher wird der mittlere Vektor mit den Fraktionsmedianen verglichen. Mindestens 20 Reden erforderlich, sonst „nicht ausreichend Daten“.",
-  },
-  {
-    eb: "5 · Bekannte Grenzen",
-    t: "Was diese Werkzeuge nicht zeigen",
-    d: "Sprachstil ≠ Stimmverhalten. Reden im Plenum sind kuratierter Diskurs, nicht private Meinung. Ironie und rhetorische Frage werden nicht zuverlässig erkannt.",
-  },
-];
+function germanShort(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return new Intl.DateTimeFormat("de-DE", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(d);
+}
+
+function germanDateTime(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return new Intl.DateTimeFormat("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(d);
+}
+
+type StepRow = { eb: string; t: string; d: string };
+
+function steps(data: MethodologyData): StepRow[] {
+  const c = data.corpus;
+  const dateRange =
+    c.earliestDate && c.latestDate
+      ? `${germanShort(c.earliestDate)} – ${germanShort(c.latestDate)}`
+      : "—";
+
+  return [
+    {
+      eb: "1 · Datenquelle",
+      t: "Bundestag · Open Data",
+      d: `Plenarprotokolle (XML). Aktuell ${formatGerman(c.totalSpeeches)} Reden aus ${formatGerman(c.totalSessions)} Sitzungen, ${formatGerman(c.totalMps)} Abgeordnete. Zeitraum: ${dateRange}. Quelle wird täglich abgeglichen, sobald die Sitzungsprotokolle veröffentlicht sind.`,
+    },
+    {
+      eb: "2 · Embedding",
+      t: `Modell: ${data.embedding.model}`,
+      d: `Jede Rede wird in einen ${data.embedding.dim}-dimensionalen Bedeutungsvektor umgewandelt. Aktuell ${formatGerman(data.embedding.count)} Reden eingebettet. Das Modell ist mehrsprachig, deutscher Text wird unverändert verarbeitet.`,
+    },
+    {
+      eb: "3 · 2D-Projektion",
+      t: `UMAP (n_neighbors=${data.umap.nNeighbors}, min_dist=${data.umap.minDist})`,
+      d: `Aus dem ${data.embedding.dim}-D Vektorraum wird mit UMAP eine 2D-Karte (Atlas) erzeugt. ${formatGerman(data.umap.count)} Reden projiziert. Globale Strukturen bleiben erhalten; Nähe auf der Karte ≈ semantische Ähnlichkeit der Reden.`,
+    },
+    {
+      eb: "4 · Themen-Cluster",
+      t: data.clustering.method,
+      d: `${data.clustering.k} Cluster über alle Reden gebildet, davon aktuell ${data.clustering.activeClusters} im Datensatz vertreten. Bezeichnungen stammen aus c-TF-IDF gegen den Rest des Korpus. Generiert: ${germanDateTime(data.clustering.generatedAt)}.`,
+    },
+    {
+      eb: "5 · Charakteristische Wendungen",
+      t: "Log-Odds-Ratio mit Dirichlet-Prior",
+      d: `Pro Abgeordnete:r werden Wörter ermittelt, die statistisch häufiger genutzt werden als im Gesamt-Korpus. Methode: Monroe, Colaresi & Quinn (2008), Prior α=${data.distinctivePhrases.alpha}, Mindesthäufigkeit ${data.distinctivePhrases.minCount}. Eigennamen und prozedurale Floskeln werden gefiltert.`,
+    },
+    {
+      eb: "6 · Bekannte Grenzen",
+      t: "Was diese Werkzeuge nicht zeigen",
+      d: "Sprachstil ≠ Stimmverhalten. Reden im Plenum sind kuratierter Diskurs, nicht private Meinung. Ironie und rhetorische Fragen werden nicht zuverlässig erkannt. Bei wenigen Reden pro Person ist die Auswertung statistisch instabil.",
+    },
+  ];
+}
 
 export function MethodologyModal({ open, onOpenChange }: Props) {
+  const methodology = useQuery({
+    queryKey: ["methodology"],
+    queryFn: () => getMethodology(),
+    enabled: open,
+  });
+
   return (
     <ModalFrame
       open={open}
@@ -53,51 +100,57 @@ export function MethodologyModal({ open, onOpenChange }: Props) {
             color: "var(--ink-2)",
           }}
         >
-          PolitScope rechnet jede Bundestagsrede in einen 384-dimensionalen Bedeutungsvektor um,
-          gruppiert sie zu Themen und vergleicht sie nach stilistischen Merkmalen. Die folgenden
-          Schritte sind transparent und reproduzierbar — der Quellcode liegt offen.
+          PolitScope rechnet jede Bundestagsrede in einen Bedeutungsvektor um, gruppiert sie zu
+          Themen und vergleicht sie nach stilistischen Merkmalen. Die folgenden Schritte sind
+          transparent und reproduzierbar — der Quellcode liegt offen, alle Parameter sind unten
+          aufgeführt.
         </p>
 
-        {STEPS.map((s, i) => (
-          <div
-            key={s.eb}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "120px 1fr",
-              gap: 16,
-              paddingBottom: 14,
-              borderBottom: i < STEPS.length - 1 ? "1px solid var(--hairline-2)" : "none",
-            }}
-          >
-            <div className="t-eyebrow" style={{ alignSelf: "start", paddingTop: 4 }}>
-              {s.eb}
-            </div>
-            <div>
-              <div
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: 16,
-                  fontWeight: 500,
-                  color: "var(--ink)",
-                  marginBottom: 4,
-                }}
-              >
-                {s.t}
+        {methodology.isPending && (
+          <div style={{ color: "var(--muted)", fontSize: 13 }}>Lade Methodik-Daten…</div>
+        )}
+
+        {methodology.data &&
+          steps(methodology.data).map((s, i, arr) => (
+            <div
+              key={s.eb}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "140px 1fr",
+                gap: 16,
+                paddingBottom: 14,
+                borderBottom: i < arr.length - 1 ? "1px solid var(--hairline-2)" : "none",
+              }}
+            >
+              <div className="t-eyebrow" style={{ alignSelf: "start", paddingTop: 4 }}>
+                {s.eb}
               </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: "var(--font-sans)",
-                  fontSize: 12.5,
-                  lineHeight: 1.5,
-                  color: "var(--ink-2)",
-                }}
-              >
-                {s.d}
-              </p>
+              <div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: "var(--ink)",
+                    marginBottom: 4,
+                  }}
+                >
+                  {s.t}
+                </div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontFamily: "var(--font-sans)",
+                    fontSize: 12.5,
+                    lineHeight: 1.5,
+                    color: "var(--ink-2)",
+                  }}
+                >
+                  {s.d}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
         <div
           style={{
@@ -108,12 +161,28 @@ export function MethodologyModal({ open, onOpenChange }: Props) {
             flexWrap: "wrap",
           }}
         >
-          <button type="button" className="btn-ghost">
-            <Icon name="download" size={12} /> Whitepaper (PDF, 22 S.)
-          </button>
-          <button type="button" className="btn-ghost">
-            <Icon name="book" size={12} /> GitHub-Repository
-          </button>
+          {methodology.data && (
+            <>
+              <a
+                href={methodology.data.links.github}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="btn-ghost"
+                style={{ textDecoration: "none" }}
+              >
+                <Icon name="book" size={12} /> GitHub-Repository
+              </a>
+              <a
+                href={methodology.data.links.dataSource}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="btn-ghost"
+                style={{ textDecoration: "none" }}
+              >
+                <Icon name="download" size={12} /> bundestag.de Open Data
+              </a>
+            </>
+          )}
           <span style={{ flex: 1 }} />
           <span
             style={{
@@ -122,7 +191,8 @@ export function MethodologyModal({ open, onOpenChange }: Props) {
               color: "var(--muted)",
             }}
           >
-            Letzte Methodik-Änderung: 11.04.2026
+            Letzte Cluster-Berechnung:{" "}
+            {methodology.data ? germanDateTime(methodology.data.clustering.generatedAt) : "—"}
           </span>
         </div>
       </div>
