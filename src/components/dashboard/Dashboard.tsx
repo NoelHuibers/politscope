@@ -17,7 +17,6 @@ import { formatGerman, useCorpusStats } from "@/lib/hooks/useCorpusStats";
 import { getAtlasPoints } from "@/lib/server/atlas";
 import { useUI } from "@/state/ui";
 import { PanelHead } from "./PanelHead";
-import { SpeechInspector } from "./SpeechInspector";
 
 const HERO_SPEAKERS = [
   "merz",
@@ -43,7 +42,7 @@ export function Dashboard() {
     queryFn: () => getAtlasPoints(),
   });
   const statsQuery = useCorpusStats();
-  const [inspectedSpeech, setInspectedSpeech] = useState<string | null>(null);
+  const openSpeechInspector = useUI((s) => s.openSpeechInspector);
   const totalSpeechesLabel = formatGerman(statsQuery.data?.totalSpeeches);
   const newThisWeekLabel = formatGerman(statsQuery.data?.newThisWeek);
   const [hoveredW, setHoveredW] = useState<string | null>(null);
@@ -178,7 +177,7 @@ export function Dashboard() {
                   newThisWeek={(statsQuery.data?.newThisWeek ?? 0) > 0}
                   newThisWeekCount={statsQuery.data?.newThisWeek ?? 0}
                   realPoints={atlasQuery.data?.points ?? null}
-                  onPointClick={(id) => setInspectedSpeech(id)}
+                  onPointClick={openSpeechInspector}
                 />
               </div>
 
@@ -495,12 +494,6 @@ export function Dashboard() {
         </div>
       </div>
       <BottomStrip />
-      <SpeechInspector
-        speechId={inspectedSpeech}
-        onOpenChange={(open) => {
-          if (!open) setInspectedSpeech(null);
-        }}
-      />
     </div>
   );
 }

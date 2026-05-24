@@ -63,7 +63,10 @@ export function TopBar() {
         </span>
       </div>
 
-      <div
+      <button
+        type="button"
+        onClick={() => useUI.getState().openSearchPalette()}
+        aria-label="Reden suchen"
         style={{
           flex: 1,
           maxWidth: 480,
@@ -75,6 +78,10 @@ export function TopBar() {
           borderRadius: 6,
           padding: "0 12px",
           height: 34,
+          cursor: "pointer",
+          fontFamily: "var(--font-sans)",
+          color: "var(--ink-2)",
+          textAlign: "left",
         }}
       >
         <Icon name="search" size={13} color="var(--muted)" />
@@ -95,7 +102,7 @@ export function TopBar() {
         >
           ⌘K
         </span>
-      </div>
+      </button>
 
       <div style={{ flex: 1 }} />
 

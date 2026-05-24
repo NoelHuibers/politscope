@@ -1,7 +1,13 @@
-import * as Dialog from "@radix-ui/react-dialog";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { PartyDot } from "@/components/PartyDot";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PARTY, type PartyId } from "@/data/parties";
 import { getSpeechById } from "@/lib/server/speech";
 
@@ -37,159 +43,66 @@ export function SpeechInspector({ speechId, onOpenChange }: Props) {
   const party = speech?.mp?.party ? PARTY[speech.mp.party as PartyId] : null;
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 50,
-          }}
-        />
-        <Dialog.Content
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "min(720px, 92vw)",
-            maxHeight: "85vh",
-            background: "var(--panel)",
-            border: "1px solid var(--hairline)",
-            borderRadius: 8,
-            boxShadow: "var(--shadow-lg, 0 20px 60px rgba(0,0,0,0.35))",
-            padding: 0,
-            zIndex: 51,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              padding: "18px 24px 14px",
-              borderBottom: "1px solid var(--hairline)",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              gap: 16,
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {speechQuery.isPending && (
-                <div style={{ color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
-                  Lade Rede…
-                </div>
-              )}
-              {speechQuery.isError && (
-                <div style={{ color: "var(--accent)", fontFamily: "var(--font-sans)" }}>
-                  Konnte Rede nicht laden.
-                </div>
-              )}
-              {speech && (
-                <>
-                  <Dialog.Title asChild>
-                    <h2
-                      style={{
-                        fontFamily: "var(--font-serif)",
-                        fontWeight: 500,
-                        fontSize: 24,
-                        margin: 0,
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {speech.mp ? (
-                        <Link
-                          to="/$locale/abgeordnete/$id"
-                          params={{ locale: "de", id: speech.mp.extId }}
-                          style={{ color: "inherit", textDecoration: "none" }}
-                        >
-                          {speech.mp.name}
-                        </Link>
-                      ) : (
-                        "Unbekannte Sprecher:in"
-                      )}
-                    </h2>
-                  </Dialog.Title>
-                  <Dialog.Description asChild>
-                    <div
-                      style={{
-                        marginTop: 6,
-                        fontFamily: "var(--font-sans)",
-                        fontSize: 12.5,
-                        color: "var(--ink-2)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      {party && (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                          <PartyDot id={speech.mp?.party as PartyId} size={9} />
-                          <span style={{ color: party.colorVar, fontWeight: 600 }}>
-                            {party.full}
-                          </span>
-                        </span>
-                      )}
-                      {speech.mp?.role && (
-                        <span style={{ color: "var(--muted)" }}>· {speech.mp.role}</span>
-                      )}
-                      <span style={{ color: "var(--muted)" }}>·</span>
-                      <span>{germanLong(speech.sessionDate)}</span>
-                      <span style={{ color: "var(--muted)" }}>
-                        · WP{speech.wahlperiode} Sitzung {speech.sitzung}
-                      </span>
-                      {speech.top !== null && (
-                        <span style={{ color: "var(--muted)" }}>· TOP {speech.top}</span>
-                      )}
-                      <span style={{ color: "var(--muted)" }}>· {speech.wordCount} Wörter</span>
-                    </div>
-                  </Dialog.Description>
-                </>
-              )}
-            </div>
-            <Dialog.Close asChild>
-              <button
-                type="button"
-                aria-label="Schließen"
-                style={{
-                  background: "transparent",
-                  border: "1px solid var(--hairline)",
-                  borderRadius: 4,
-                  width: 28,
-                  height: 28,
-                  cursor: "pointer",
-                  color: "var(--ink-2)",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 14,
-                  lineHeight: 1,
-                }}
-              >
-                ×
-              </button>
-            </Dialog.Close>
-          </div>
-
-          {speech && (
-            <div
-              className="scroll-y"
-              style={{
-                padding: "18px 24px 24px",
-                overflowY: "auto",
-                fontFamily: "var(--font-serif)",
-                fontSize: 15,
-                lineHeight: 1.6,
-                color: "var(--ink)",
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {speech.text}
-            </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] w-[min(720px,92vw)] gap-0 overflow-hidden p-0 sm:max-w-[720px]">
+        <DialogHeader className="border-b px-6 pt-5 pb-4">
+          {speechQuery.isPending && (
+            <DialogTitle className="text-muted-foreground">Lade Rede…</DialogTitle>
           )}
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          {speechQuery.isError && (
+            <DialogTitle className="text-destructive">Konnte Rede nicht laden.</DialogTitle>
+          )}
+          {speech && (
+            <>
+              <DialogTitle
+                className="text-2xl font-medium"
+                style={{ fontFamily: "var(--font-serif)" }}
+              >
+                {speech.mp ? (
+                  <Link
+                    to="/$locale/abgeordnete/$id"
+                    params={{ locale: "de", id: speech.mp.extId }}
+                    className="text-foreground no-underline hover:underline"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    {speech.mp.name}
+                  </Link>
+                ) : (
+                  "Unbekannte Sprecher:in"
+                )}
+              </DialogTitle>
+              <DialogDescription asChild>
+                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  {party && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <PartyDot id={speech.mp?.party as PartyId} size={9} />
+                      <span className="font-semibold" style={{ color: party.colorVar }}>
+                        {party.full}
+                      </span>
+                    </span>
+                  )}
+                  {speech.mp?.role && <span>· {speech.mp.role}</span>}
+                  <span>·</span>
+                  <span>{germanLong(speech.sessionDate)}</span>
+                  <span>
+                    · WP{speech.wahlperiode} Sitzung {speech.sitzung}
+                  </span>
+                  {speech.top !== null && <span>· TOP {speech.top}</span>}
+                  <span>· {speech.wordCount} Wörter</span>
+                </div>
+              </DialogDescription>
+            </>
+          )}
+        </DialogHeader>
+        {speech && (
+          <div
+            className="scroll-y overflow-y-auto px-6 pt-4 pb-6 text-base whitespace-pre-wrap text-foreground"
+            style={{ fontFamily: "var(--font-serif)", lineHeight: 1.6 }}
+          >
+            {speech.text}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

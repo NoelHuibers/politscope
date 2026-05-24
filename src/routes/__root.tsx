@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import { type ReactNode, useState } from "react";
+import { GlobalOverlays } from "@/components/GlobalOverlays";
 import appCss from "@/styles/app.css?url";
 
 export const Route = createRootRoute({
@@ -39,6 +40,7 @@ function RootComponent() {
       <QueryClientProvider client={queryClient}>
         <NuqsAdapter>
           <Outlet />
+          <GlobalOverlays />
         </NuqsAdapter>
       </QueryClientProvider>
     </RootDocument>

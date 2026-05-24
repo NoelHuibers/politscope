@@ -115,11 +115,7 @@
   },
   "overrides": [
     {
-      "includes": [
-        "src/components/viz/**/*.tsx",
-        "src/components/profile/**/*.tsx",
-        "src/components/dashboard/**/*.tsx"
-      ],
+      "includes": ["src/components/**/*.tsx"],
       "linter": {
         "rules": {
           "a11y": {
@@ -131,6 +127,19 @@
               "level": "error",
               "options": { "maxAllowedComplexity": 30 }
             }
+          },
+          "nursery": {
+            "useSortedClasses": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/components/ui/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off"
           }
         }
       }
