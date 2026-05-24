@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { MaverickCard } from "@/components/dashboard/MaverickCard";
 import { GlossaryNote } from "@/components/GlossaryNote";
@@ -7,22 +9,54 @@ import { LeftRail } from "@/components/layout/LeftRail";
 import { TopBar } from "@/components/layout/TopBar";
 import { PartyDot } from "@/components/PartyDot";
 import { PositioningScatter } from "@/components/viz/PositioningScatter";
-import { Sparkline } from "@/components/viz/Sparkline";
-import { MPS } from "@/data/mps";
-import { PARTY } from "@/data/parties";
+import { PARTY, type PartyId } from "@/data/parties";
+import { useCorpusStats } from "@/lib/hooks/useCorpusStats";
+import { getPositioning, type PositioningMp } from "@/lib/server/positioning";
+import { useFilters } from "@/state/filters";
 import { useUI } from "@/state/ui";
 
-const TOP_OUTLIERS = [
-  { id: "oezdemir", drift: "klingt 38 % näher an FDP", n: 14 },
-  { id: "kuban", drift: "klingt 31 % näher an AfD", n: 22 },
-  { id: "wagenkn", drift: "klingt 27 % näher an CDU", n: 19 },
-  { id: "scholz", drift: "klingt 18 % näher an CDU", n: 41 },
-] as const;
+const TOP_N_OUTLIERS = 8;
+
+/** Top N MPs sorted by |ax| (how far they sit from the midpoint of the axis). */
+function pickOutliers(mps: PositioningMp[]): PositioningMp[] {
+  return [...mps]
+    .filter((m) => m.n >= 2)
+    .sort((a, b) => Math.abs(b.ax) - Math.abs(a.ax))
+    .slice(0, TOP_N_OUTLIERS);
+}
+
+function driftLabel(ax: number, axisA: PartyId, axisB: PartyId): string {
+  // ax: +1 = axisA pole, -1 = axisB pole.
+  const pct = Math.round(Math.abs(ax) * 100);
+  const pole = ax >= 0 ? axisA : axisB;
+  return `klingt ${pct} % näher an ${PARTY[pole]?.name ?? pole}`;
+}
 
 export function PositioningDetail() {
   const theme = useUI((s) => s.theme);
   const dark = theme === "dark";
-  const [hoveredId, setHoveredId] = useState<string | null>("oezdemir");
+  const [filters] = useFilters();
+  const topicFilter = filters.topic;
+
+  // For now, axis poles are fixed (matches dashboard default). Wiring axis
+  // selectors is a follow-up — getPositioning already takes axisA / axisB.
+  const axisA: PartyId = "afd";
+  const axisB: PartyId = "grn";
+
+  const positioningQuery = useQuery({
+    queryKey: ["positioning", topicFilter, axisA, axisB],
+    queryFn: () => getPositioning({ data: { topic: topicFilter ?? null, axisA, axisB } }),
+  });
+
+  const stats = useCorpusStats();
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const mps = positioningQuery.data?.mps ?? [];
+  const outliers = pickOutliers(mps);
+  const totalMps = stats.data?.totalMps ?? null;
+  const earliestYear = stats.data?.earliestDate?.slice(0, 4);
+  const latestYear = stats.data?.latestDate?.slice(0, 4);
+  const topicLabel = topicFilter ? "ausgewähltes Thema" : "Alle Themen";
 
   return (
     <div
@@ -71,7 +105,11 @@ export function PositioningDetail() {
                 marginBottom: 4,
               }}
             >
-              <span className="t-eyebrow">Sprecherpositionierung · 736 MdB · WP 12–21</span>
+              <span className="t-eyebrow">
+                Sprecherpositionierung
+                {totalMps !== null && ` · ${totalMps} MdB`}
+                {earliestYear && latestYear && ` · ${earliestYear}–${latestYear}`}
+              </span>
             </div>
             <h1 className="t-display" style={{ margin: "2px 0 6px" }}>
               Wer klingt wie eine andere Fraktion?
@@ -87,8 +125,8 @@ export function PositioningDetail() {
               }}
             >
               Jeder Punkt ist ein Bundestagsabgeordneter, eingefärbt nach tatsächlicher Fraktion.
-              Die Position auf der waagerechten Achse zeigt, wessen Sprache — AfD oder Grüne — die
-              Reden dieses MdB rhetorisch näherkommen.
+              Die Position auf der waagerechten Achse zeigt, wessen Sprache — {PARTY[axisA].name}{" "}
+              oder {PARTY[axisB].name} — die Reden dieses MdB rhetorisch näherkommen.
             </p>
 
             <div
@@ -104,13 +142,13 @@ export function PositioningDetail() {
                 Achse
               </span>
               <div className="chip" style={{ height: 28, padding: "0 12px" }}>
-                <PartyDot id="afd" size={9} /> AfD
+                <PartyDot id={axisA} size={9} /> {PARTY[axisA].name}
               </div>
               <span style={{ color: "var(--muted)", fontFamily: "var(--font-mono)", fontSize: 12 }}>
                 ↔
               </span>
               <div className="chip" style={{ height: 28, padding: "0 12px" }}>
-                <PartyDot id="grn" size={9} /> Grüne
+                <PartyDot id={axisB} size={9} /> {PARTY[axisB].name}
               </div>
               <span
                 style={{ width: 1, height: 22, background: "var(--hairline)", margin: "0 4px" }}
@@ -119,7 +157,7 @@ export function PositioningDetail() {
                 Thema
               </span>
               <div className="chip" style={{ height: 28, padding: "0 12px" }}>
-                Landwirtschaft <Icon name="chev" size={10} color="var(--muted)" />
+                {topicLabel}
               </div>
               <div style={{ flex: 1 }} />
               <button type="button" className="btn-ghost">
@@ -132,11 +170,12 @@ export function PositioningDetail() {
                 width={620}
                 height={420}
                 dark={dark}
-                axisA="afd"
-                axisB="grn"
-                topic="Landwirtschaft"
+                axisA={axisA}
+                axisB={axisB}
+                topic={topicLabel}
                 hoveredId={hoveredId}
                 onHover={setHoveredId}
+                realMps={positioningQuery.data?.mps ?? null}
               />
             </div>
 
@@ -185,73 +224,118 @@ export function PositioningDetail() {
                       marginTop: 3,
                     }}
                   >
-                    Top-Abweichler · Landwirtschaft
+                    Top-Abweichler · {topicLabel}
                   </div>
                 </div>
                 <span className="ki-tag">KI-Score</span>
               </div>
-              {TOP_OUTLIERS.map((o) => {
-                const m = MPS.find((x) => x.id === o.id);
-                if (!m) return null;
-                return (
-                  <div
-                    key={o.id}
-                    style={{
-                      padding: "11px 14px",
-                      borderTop: "1px solid var(--hairline-2)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                    }}
-                  >
-                    <PartyDot id={m.party} size={10} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontFamily: "var(--font-sans)",
-                          fontSize: 12.5,
-                          fontWeight: 600,
-                          color: "var(--ink)",
-                        }}
-                      >
-                        {m.name}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: "var(--font-sans)",
-                          fontSize: 11.5,
-                          color: "var(--muted)",
-                        }}
-                      >
-                        {PARTY[m.party].name} · {o.drift}
-                      </div>
+
+              {positioningQuery.isPending && (
+                <div
+                  style={{
+                    padding: "14px",
+                    color: "var(--muted)",
+                    fontSize: 12,
+                    textAlign: "center",
+                  }}
+                >
+                  Berechne Positionierung …
+                </div>
+              )}
+
+              {positioningQuery.data && outliers.length === 0 && (
+                <div
+                  style={{
+                    padding: "14px",
+                    color: "var(--muted)",
+                    fontSize: 12,
+                    textAlign: "center",
+                  }}
+                >
+                  Zu wenige Reden für statistische Auswertung.
+                </div>
+              )}
+
+              {outliers.map((m) => (
+                <Link
+                  key={m.extId}
+                  to="/$locale/abgeordnete/$id"
+                  params={{ locale: "de", id: m.extId }}
+                  onMouseEnter={() => setHoveredId(m.extId)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  style={{
+                    padding: "11px 14px",
+                    borderTop: "1px solid var(--hairline-2)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    textDecoration: "none",
+                    color: "inherit",
+                    background: hoveredId === m.extId ? "var(--bg-2)" : "transparent",
+                    transition: "background 80ms ease-out",
+                  }}
+                >
+                  <PartyDot id={m.party as PartyId} size={10} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontFamily: "var(--font-sans)",
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        color: "var(--ink)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {m.name}
                     </div>
                     <div
                       style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-end",
-                        gap: 3,
+                        fontFamily: "var(--font-sans)",
+                        fontSize: 11.5,
+                        color: "var(--muted)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
-                      <Sparkline
-                        values={[0.78, 0.72, 0.68, 0.62, 0.58, 0.55, 0.52, 0.49]}
-                        width={70}
-                        height={18}
-                      />
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: 9.5,
-                          color: "var(--muted)",
-                        }}
-                      >
-                        {o.n} Reden
-                      </span>
+                      {PARTY[m.party as PartyId]?.name ?? m.party} ·{" "}
+                      {driftLabel(m.ax, axisA, axisB)}
                     </div>
                   </div>
-                );
-              })}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                      gap: 2,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "var(--ink-2)",
+                      }}
+                    >
+                      ax {m.ax >= 0 ? "+" : ""}
+                      {m.ax.toFixed(2)}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 9.5,
+                        color: "var(--muted)",
+                      }}
+                    >
+                      {m.n} Reden
+                    </span>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
