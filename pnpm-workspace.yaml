@@ -3,5 +3,5 @@ allowBuilds:
   '@swc/core': true
   '@vaadin/vaadin-usage-statistics': false
   esbuild: true
-  msw: set this to true or false
+  msw: false
   sharp: true
