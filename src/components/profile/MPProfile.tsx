@@ -1,11 +1,13 @@
+import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@/components/Icon";
 import { BottomStrip } from "@/components/layout/BottomStrip";
 import { LeftRail } from "@/components/layout/LeftRail";
 import { TopBar } from "@/components/layout/TopBar";
 import { PartyDot } from "@/components/PartyDot";
+import { SpeechListItem } from "@/components/SpeechListItem";
 import { type MP, MPS } from "@/data/mps";
 import { PARTY, type PartyId } from "@/data/parties";
-import type { MpProfile as MpProfileData } from "@/lib/server/directory";
+import { getSpeechesByMp, type MpProfile as MpProfileData } from "@/lib/server/directory";
 import { useUI } from "@/state/ui";
 import { ProfileSection } from "./ProfileSection";
 import { Stat } from "./Stat";
@@ -114,6 +116,17 @@ function PartyLabel({ mp }: { mp: MP }) {
 export function MPProfile({ mpId, realProfile = null }: Props) {
   const theme = useUI((s) => s.theme);
   const dark = theme === "dark";
+  const openSpeechInspector = useUI((s) => s.openSpeechInspector);
+
+  const realExtId = realProfile?.extId ?? null;
+  const speechesQuery = useQuery({
+    queryKey: ["speeches-by-mp", realExtId],
+    queryFn: () => {
+      if (!realExtId) throw new Error("no extId");
+      return getSpeechesByMp({ data: realExtId });
+    },
+    enabled: realExtId !== null,
+  });
 
   // Mock MP used for the right-column charts (trajectory, cohesion, deviations,
   // distinctive phrases) — those need full-corpus analytics we don't have yet.
@@ -277,6 +290,37 @@ export function MPProfile({ mpId, realProfile = null }: Props) {
 
           {/* Right column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
+            {realExtId && (
+              <ProfileSection
+                title="Alle Reden"
+                eyebrow={`${speechesQuery.data?.length ?? "—"} Reden im Korpus`}
+                hint="Chronologisch absteigend. Klick öffnet die vollständige Rede."
+              >
+                {speechesQuery.isPending && (
+                  <div style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0" }}>
+                    Lade Reden…
+                  </div>
+                )}
+                {speechesQuery.data && speechesQuery.data.length === 0 && (
+                  <div style={{ color: "var(--muted)", fontSize: 13, padding: "8px 0" }}>
+                    Keine Reden im Korpus.
+                  </div>
+                )}
+                {speechesQuery.data && speechesQuery.data.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {speechesQuery.data.map((s) => (
+                      <SpeechListItem
+                        key={s.id}
+                        speech={s}
+                        showSpeaker={false}
+                        onSelect={openSpeechInspector}
+                      />
+                    ))}
+                  </div>
+                )}
+              </ProfileSection>
+            )}
+
             <ProfileSection
               title="Trajektorie im semantischen Raum"
               eyebrow={`Embedding · ${mp.since} → 2026`}

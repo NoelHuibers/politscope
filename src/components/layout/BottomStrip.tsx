@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useCorpusStats } from "@/lib/hooks/useCorpusStats";
 import { getRecentSessions } from "@/lib/server/directory";
 import * as m from "@/paraglide/messages";
@@ -81,7 +82,19 @@ export function BottomStrip() {
           {m.bottom_recent_sessions()}
         </span>
         {(recent.data ?? []).map((s) => (
-          <div key={s.id} style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+          <Link
+            key={s.id}
+            to="/$locale/sitzungen/$wp/$nr"
+            params={{ locale: "de", wp: String(s.wahlperiode), nr: String(s.sitzung) }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              minWidth: 0,
+              textDecoration: "none",
+              color: "inherit",
+            }}
+          >
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--muted)" }}>
               {germanShortDate(s.date)}
             </div>
@@ -99,7 +112,7 @@ export function BottomStrip() {
             >
               WP{s.wahlperiode} · Sitzung {s.sitzung} · {s.speechCount} Reden
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

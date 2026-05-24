@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { MethodologyModal } from "@/components/dashboard/MethodologyModal";
 import { Icon } from "@/components/Icon";
@@ -38,7 +38,16 @@ export function TopBar() {
         flex: "0 0 auto",
       }}
     >
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+      <Link
+        to="/$locale"
+        params={{ locale: currentLocale }}
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: 8,
+          textDecoration: "none",
+        }}
+      >
         <span
           style={{
             fontFamily: "var(--font-serif)",
@@ -61,7 +70,7 @@ export function TopBar() {
         >
           {m.app_tagline()}
         </span>
-      </div>
+      </Link>
 
       <button
         type="button"
@@ -105,6 +114,25 @@ export function TopBar() {
       </button>
 
       <div style={{ flex: 1 }} />
+
+      <Link
+        to="/$locale/abgeordnete"
+        params={{ locale: currentLocale }}
+        className="btn-ghost"
+        activeOptions={{ exact: true }}
+        style={{ textDecoration: "none" }}
+      >
+        Abgeordnete
+      </Link>
+      <Link
+        to="/$locale/sitzungen"
+        params={{ locale: currentLocale }}
+        className="btn-ghost"
+        activeOptions={{ exact: true }}
+        style={{ textDecoration: "none" }}
+      >
+        Sitzungen
+      </Link>
 
       <button type="button" className="btn-ghost" onClick={() => setMethodologyOpen(true)}>
         <Icon name="methodology" size={12} /> {m.topbar_methodology()}
