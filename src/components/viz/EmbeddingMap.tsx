@@ -3,7 +3,6 @@ import { ScatterplotLayer } from "@deck.gl/layers";
 import DeckGL from "@deck.gl/react";
 import { useEffect, useMemo, useState } from "react";
 import { PARTY, type PartyId, partyRgb } from "@/data/parties";
-import { TOPICS } from "@/data/topics";
 
 export type AtlasRealPoint = {
   id: string;
@@ -80,25 +79,7 @@ export function EmbeddingMap({
   useEffect(() => setMounted(true), []);
 
   const showRealData = realPoints !== null;
-
-  // Mock points generated once for the loading skeleton.
-  const mockPoints = useMemo(() => {
-    const out: { x: number; y: number }[] = [];
-    let seed = 1;
-    const rand = () => {
-      seed = (seed * 9301 + 49297) % 233280;
-      return seed / 233280;
-    };
-    for (const t of TOPICS) {
-      const n = Math.round(t.n / 700);
-      for (let i = 0; i < n; i += 1) {
-        const r = (rand() + rand() + rand()) / 3 - 0.5;
-        const r2 = (rand() + rand() + rand()) / 3 - 0.5;
-        out.push({ x: t.x + r * 0.42, y: t.y + r2 * 0.36 });
-      }
-    }
-    return out;
-  }, []);
+  const isLoading = realPoints === null;
 
   const legend = useMemo(() => {
     if (!realPoints || realPoints.length === 0) return [];
@@ -110,53 +91,39 @@ export function EmbeddingMap({
       .sort((a, b) => b.count - a.count);
   }, [realPoints]);
 
-  const dotColor: [number, number, number] = dark ? [220, 210, 190] : [40, 30, 20];
-
   const layers = useMemo(() => {
-    if (showRealData && realPoints) {
-      return [
-        new ScatterplotLayer<AtlasRealPoint>({
-          id: "real-points",
-          data: realPoints,
-          getPosition: (p) => [p.x, p.y],
-          getFillColor: (p) => {
-            const [r, g, b] = partyRgb(p.party as PartyId, dark);
-            return [r, g, b, 220];
-          },
-          getRadius: 6,
-          radiusUnits: "pixels",
-          radiusMinPixels: 2.5,
-          radiusMaxPixels: 14,
-          pickable: onPointClick !== undefined,
-          onClick: onPointClick
-            ? (info: PickingInfo<AtlasRealPoint>) => {
-                if (info.object) onPointClick(info.object.id);
-              }
-            : undefined,
-          onHover: (info: PickingInfo<AtlasRealPoint>) => {
-            if (info.object && info.x !== undefined && info.y !== undefined) {
-              setHovered({ point: info.object, px: info.x, py: info.y });
-            } else {
-              setHovered(null);
-            }
-          },
-          autoHighlight: true,
-          highlightColor: [255, 255, 255, 80],
-        }),
-      ];
-    }
+    if (!(showRealData && realPoints)) return [];
     return [
-      new ScatterplotLayer({
-        id: "mock-points",
-        data: mockPoints,
-        getPosition: (p: { x: number; y: number }) => [p.x, p.y],
-        getFillColor: () => [dotColor[0], dotColor[1], dotColor[2], 90],
-        getRadius: 3,
+      new ScatterplotLayer<AtlasRealPoint>({
+        id: "real-points",
+        data: realPoints,
+        getPosition: (p) => [p.x, p.y],
+        getFillColor: (p) => {
+          const [r, g, b] = partyRgb(p.party as PartyId, dark);
+          return [r, g, b, 220];
+        },
+        getRadius: 6,
         radiusUnits: "pixels",
-        pickable: false,
+        radiusMinPixels: 2.5,
+        radiusMaxPixels: 14,
+        pickable: onPointClick !== undefined,
+        onClick: onPointClick
+          ? (info: PickingInfo<AtlasRealPoint>) => {
+              if (info.object) onPointClick(info.object.id);
+            }
+          : undefined,
+        onHover: (info: PickingInfo<AtlasRealPoint>) => {
+          if (info.object && info.x !== undefined && info.y !== undefined) {
+            setHovered({ point: info.object, px: info.x, py: info.y });
+          } else {
+            setHovered(null);
+          }
+        },
+        autoHighlight: true,
+        highlightColor: [255, 255, 255, 80],
       }),
     ];
-  }, [showRealData, realPoints, mockPoints, dark, onPointClick, dotColor]);
+  }, [showRealData, realPoints, dark, onPointClick]);
 
   // Pre-compute zoom scale + target so the cluster-label sub-components depend
   // on primitive numbers (no fresh-closure infinite-render-loop trap).
@@ -185,6 +152,27 @@ export function EmbeddingMap({
           layers={layers}
           style={{ position: "absolute", inset: "0" }}
         />
+      )}
+
+      {isLoading && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "var(--font-mono)",
+            fontSize: 10.5,
+            color: "var(--muted)",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        >
+          Lade Atlas …
+        </div>
       )}
 
       {/* Cluster labels — positioned in screen coords via viewState projection.
