@@ -25,6 +25,8 @@ type Props = {
    * because we don't have topic clustering yet (#17).
    */
   realPoints?: AtlasRealPoint[] | null;
+  /** Fired when a real point is clicked. Mock points are not clickable. */
+  onPointClick?: (id: string) => void;
 };
 
 type Point = {
@@ -47,6 +49,7 @@ export function EmbeddingMap({
   newThisWeek = false,
   newThisWeekCount = 0,
   realPoints = null,
+  onPointClick,
 }: Props) {
   const formattedNew = newThisWeekCount.toLocaleString("de-DE").replace(/\./g, " ");
   const points = useMemo<Point[]>(() => {
@@ -96,7 +99,8 @@ export function EmbeddingMap({
         width: "100%",
         height: "100%",
       }}
-      aria-hidden="true"
+      role="img"
+      aria-label="Embedding-Atlas der Bundestagsreden"
     >
       <defs>
         {TOPICS.map((t) => (
@@ -136,7 +140,20 @@ export function EmbeddingMap({
         ? realPoints.map((p) => {
             const partyDef = PARTY[p.party as PartyId];
             const fill = partyDef ? partyDef.colorVar : dotColor;
-            return <circle key={p.id} cx={X(p.x)} cy={Y(p.y)} r={2.4} fill={fill} opacity={0.85} />;
+            return (
+              <circle
+                key={p.id}
+                cx={X(p.x)}
+                cy={Y(p.y)}
+                r={2.4}
+                fill={fill}
+                opacity={0.85}
+                onClick={onPointClick ? () => onPointClick(p.id) : undefined}
+                style={onPointClick ? { cursor: "pointer" } : undefined}
+              >
+                {onPointClick && <title>Klick: Rede ansehen</title>}
+              </circle>
+            );
           })
         : points.map((p, i) => {
             const dim = highlightTopic && highlightTopic !== p.tid;
