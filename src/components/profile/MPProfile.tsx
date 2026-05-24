@@ -10,6 +10,7 @@ import { PARTY, type PartyId } from "@/data/parties";
 import { getSpeechesByMp, type MpProfile as MpProfileData } from "@/lib/server/directory";
 import { getMpDistinctivePhrases } from "@/lib/server/distinctive";
 import { useUI } from "@/state/ui";
+import { InsufficientDataFrame } from "./InsufficientDataFrame";
 import { ProfileSection } from "./ProfileSection";
 import { Stat } from "./Stat";
 
@@ -330,174 +331,198 @@ export function MPProfile({ mpId, realProfile = null }: Props) {
               </ProfileSection>
             )}
 
-            <ProfileSection
-              title="Trajektorie im semantischen Raum"
-              eyebrow={`Embedding · ${mp.since} → 2026`}
-              hint="Quartalsweiser Verlauf der Reden, projiziert. Annotiert: thematische Wendepunkte."
-              ki
-            >
-              <div
-                style={{
-                  position: "relative",
-                  height: 220,
-                  background: "var(--map-bg)",
-                  borderRadius: 4,
-                  overflow: "hidden",
-                }}
-              >
-                <svg
-                  viewBox="0 0 600 220"
-                  width="100%"
-                  height="220"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M 60 160 C 120 140, 180 130, 240 110 S 360 80, 410 70 S 510 90, 540 60"
-                    stroke={PARTY[mp.party].colorVar}
-                    strokeWidth="1.6"
-                    fill="none"
-                    strokeOpacity="0.85"
-                  />
-                  {TRAJECTORY_POINTS.map(([cx, cy], i) => (
-                    <circle
-                      // biome-ignore lint/suspicious/noArrayIndexKey: stable static positions
-                      key={i}
-                      cx={cx}
-                      cy={cy}
-                      r={i === 7 ? 5 : 2.6}
-                      fill={PARTY[mp.party].colorVar}
-                      stroke={i === 7 ? (dark ? "#0e1014" : "#fff") : "none"}
-                      strokeWidth={i === 7 ? 1.5 : 0}
-                    />
-                  ))}
-                  <line
-                    x1="410"
-                    y1="70"
-                    x2="410"
-                    y2="34"
-                    stroke="var(--muted)"
-                    strokeDasharray="2 3"
-                  />
-                  <text
-                    x="412"
-                    y="28"
-                    fontFamily="var(--font-sans)"
-                    fontSize="10.5"
-                    fontWeight="600"
-                    fill="var(--ink)"
-                  >
-                    Energiekrise · 2022
-                  </text>
-                  <text
-                    x="412"
-                    y="42"
-                    fontFamily="var(--font-sans)"
-                    fontSize="10"
-                    fill="var(--muted)"
-                  >
-                    Pivot Richtung Versorgungssicherheit
-                  </text>
-                </svg>
-              </div>
-            </ProfileSection>
+            {realExtId && (
+              <InsufficientDataFrame
+                speechCount={realProfile?.totalSpeeches ?? 0}
+                threshold={10}
+                mpName={displayName}
+              />
+            )}
 
-            <ProfileSection
-              title="Kohäsion über Zeit"
-              eyebrow="Übereinstimmung mit eigener Fraktion"
-              hint="Werte: 1.0 = volle rhetorische Übereinstimmung mit dem Median der Fraktion."
-            >
-              <div style={{ height: 90, position: "relative" }}>
-                <svg
-                  viewBox="0 0 600 90"
-                  width="100%"
-                  height="90"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
+            {!realExtId && (
+              <>
+                <ProfileSection
+                  title="Trajektorie im semantischen Raum"
+                  eyebrow={`Embedding · ${mp.since} → 2026`}
+                  hint="Quartalsweiser Verlauf der Reden, projiziert. Annotiert: thematische Wendepunkte."
+                  ki
                 >
-                  <line x1="0" y1="40" x2="600" y2="40" stroke="var(--hairline)" />
-                  <text x="2" y="14" fontFamily="var(--font-mono)" fontSize="9" fill="var(--muted)">
-                    1.0
-                  </text>
-                  <text x="2" y="86" fontFamily="var(--font-mono)" fontSize="9" fill="var(--muted)">
-                    0.5
-                  </text>
-                  <path
-                    d="M 30 38 L 80 30 L 130 24 L 180 22 L 230 18 L 280 16 L 330 14 L 380 22 L 430 30 L 480 26 L 530 22 L 580 18"
-                    stroke={PARTY[mp.party].colorVar}
-                    strokeWidth="1.6"
-                    fill="none"
-                  />
-                  <path
-                    d="M 30 38 L 80 30 L 130 24 L 180 22 L 230 18 L 280 16 L 330 14 L 380 22 L 430 30 L 480 26 L 530 22 L 580 18 L 580 88 L 30 88 Z"
-                    fill={PARTY[mp.party].colorVar}
-                    opacity="0.10"
-                  />
-                </svg>
-              </div>
-            </ProfileSection>
-
-            <ProfileSection
-              title="Charakteristische Abweichungen"
-              eyebrow="Wo seine Sprache von der Fraktion abweicht"
-              ki
-            >
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                {DEVIATIONS.map((d) => (
                   <div
-                    key={d.topic}
                     style={{
-                      padding: "10px 12px",
-                      border: "1px solid var(--hairline)",
+                      position: "relative",
+                      height: 220,
+                      background: "var(--map-bg)",
                       borderRadius: 4,
-                      background: d.neutral ? "transparent" : "var(--panel-2)",
+                      overflow: "hidden",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "baseline",
-                        marginBottom: 4,
-                      }}
+                    <svg
+                      viewBox="0 0 600 220"
+                      width="100%"
+                      height="220"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
                     >
-                      <span
-                        style={{
-                          fontFamily: "var(--font-sans)",
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: "var(--ink)",
-                        }}
+                      <path
+                        d="M 60 160 C 120 140, 180 130, 240 110 S 360 80, 410 70 S 510 90, 540 60"
+                        stroke={PARTY[mp.party].colorVar}
+                        strokeWidth="1.6"
+                        fill="none"
+                        strokeOpacity="0.85"
+                      />
+                      {TRAJECTORY_POINTS.map(([cx, cy], i) => (
+                        <circle
+                          // biome-ignore lint/suspicious/noArrayIndexKey: stable static positions
+                          key={i}
+                          cx={cx}
+                          cy={cy}
+                          r={i === 7 ? 5 : 2.6}
+                          fill={PARTY[mp.party].colorVar}
+                          stroke={i === 7 ? (dark ? "#0e1014" : "#fff") : "none"}
+                          strokeWidth={i === 7 ? 1.5 : 0}
+                        />
+                      ))}
+                      <line
+                        x1="410"
+                        y1="70"
+                        x2="410"
+                        y2="34"
+                        stroke="var(--muted)"
+                        strokeDasharray="2 3"
+                      />
+                      <text
+                        x="412"
+                        y="28"
+                        fontFamily="var(--font-sans)"
+                        fontSize="10.5"
+                        fontWeight="600"
+                        fill="var(--ink)"
                       >
-                        {d.topic}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: 10.5,
-                          color: d.neutral ? "var(--muted)" : "var(--accent)",
-                        }}
+                        Energiekrise · 2022
+                      </text>
+                      <text
+                        x="412"
+                        y="42"
+                        fontFamily="var(--font-sans)"
+                        fontSize="10"
+                        fill="var(--muted)"
                       >
-                        {d.neutral ? "auf Linie" : `+${d.pct} % Richtung ${d.to}`}
-                      </span>
-                    </div>
-                    {d.q && (
-                      <div
-                        style={{
-                          fontFamily: "var(--font-serif)",
-                          fontSize: 12,
-                          fontStyle: "italic",
-                          color: "var(--ink-2)",
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {d.q}
-                      </div>
-                    )}
+                        Pivot Richtung Versorgungssicherheit
+                      </text>
+                    </svg>
                   </div>
-                ))}
-              </div>
-            </ProfileSection>
+                </ProfileSection>
+
+                <ProfileSection
+                  title="Kohäsion über Zeit"
+                  eyebrow="Übereinstimmung mit eigener Fraktion"
+                  hint="Werte: 1.0 = volle rhetorische Übereinstimmung mit dem Median der Fraktion."
+                >
+                  <div style={{ height: 90, position: "relative" }}>
+                    <svg
+                      viewBox="0 0 600 90"
+                      width="100%"
+                      height="90"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                    >
+                      <line x1="0" y1="40" x2="600" y2="40" stroke="var(--hairline)" />
+                      <text
+                        x="2"
+                        y="14"
+                        fontFamily="var(--font-mono)"
+                        fontSize="9"
+                        fill="var(--muted)"
+                      >
+                        1.0
+                      </text>
+                      <text
+                        x="2"
+                        y="86"
+                        fontFamily="var(--font-mono)"
+                        fontSize="9"
+                        fill="var(--muted)"
+                      >
+                        0.5
+                      </text>
+                      <path
+                        d="M 30 38 L 80 30 L 130 24 L 180 22 L 230 18 L 280 16 L 330 14 L 380 22 L 430 30 L 480 26 L 530 22 L 580 18"
+                        stroke={PARTY[mp.party].colorVar}
+                        strokeWidth="1.6"
+                        fill="none"
+                      />
+                      <path
+                        d="M 30 38 L 80 30 L 130 24 L 180 22 L 230 18 L 280 16 L 330 14 L 380 22 L 430 30 L 480 26 L 530 22 L 580 18 L 580 88 L 30 88 Z"
+                        fill={PARTY[mp.party].colorVar}
+                        opacity="0.10"
+                      />
+                    </svg>
+                  </div>
+                </ProfileSection>
+
+                <ProfileSection
+                  title="Charakteristische Abweichungen"
+                  eyebrow="Wo seine Sprache von der Fraktion abweicht"
+                  ki
+                >
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    {DEVIATIONS.map((d) => (
+                      <div
+                        key={d.topic}
+                        style={{
+                          padding: "10px 12px",
+                          border: "1px solid var(--hairline)",
+                          borderRadius: 4,
+                          background: d.neutral ? "transparent" : "var(--panel-2)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "baseline",
+                            marginBottom: 4,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: "var(--font-sans)",
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: "var(--ink)",
+                            }}
+                          >
+                            {d.topic}
+                          </span>
+                          <span
+                            style={{
+                              fontFamily: "var(--font-mono)",
+                              fontSize: 10.5,
+                              color: d.neutral ? "var(--muted)" : "var(--accent)",
+                            }}
+                          >
+                            {d.neutral ? "auf Linie" : `+${d.pct} % Richtung ${d.to}`}
+                          </span>
+                        </div>
+                        {d.q && (
+                          <div
+                            style={{
+                              fontFamily: "var(--font-serif)",
+                              fontSize: 12,
+                              fontStyle: "italic",
+                              color: "var(--ink-2)",
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {d.q}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ProfileSection>
+              </>
+            )}
 
             <ProfileSection
               title="Charakteristische Wendungen"

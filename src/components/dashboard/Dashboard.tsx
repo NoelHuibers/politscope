@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
+import { MaverickCard } from "@/components/dashboard/MaverickCard";
 import { Icon } from "@/components/Icon";
 import { BottomStrip } from "@/components/layout/BottomStrip";
 import { LeftRail } from "@/components/layout/LeftRail";
 import { TopBar } from "@/components/layout/TopBar";
 import { PartyDot } from "@/components/PartyDot";
 import { EmbeddingMap } from "@/components/viz/EmbeddingMap";
-import { FingerprintGrid } from "@/components/viz/FingerprintGrid";
 import { PositioningScatter } from "@/components/viz/PositioningScatter";
 import { SankeyTimeline } from "@/components/viz/SankeyTimeline";
 import { Scattertext } from "@/components/viz/Scattertext";
@@ -21,17 +21,6 @@ import { useUI } from "@/state/ui";
 import { PanelHead } from "./PanelHead";
 
 const ALL_PARTY_IDS = PARTIES.map((p) => p.id);
-
-const HERO_SPEAKERS = [
-  "merz",
-  "habeck",
-  "weidel",
-  "wagenkn",
-  "lindner",
-  "scholz",
-  "oezdemir",
-  "trittin",
-];
 
 export function Dashboard() {
   const theme = useUI((s) => s.theme);
@@ -82,7 +71,6 @@ export function Dashboard() {
   const [hoveredW, setHoveredW] = useState<string | null>(null);
   const [sankeyMode, setSankeyMode] = useState<"sankey" | "stream">("sankey");
 
-  const heroMps = MPS.filter((m) => HERO_SPEAKERS.includes(m.id));
   const hoveredMp = MPS.find((m) => m.id === hoveredId);
 
   return (
@@ -539,7 +527,7 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Fingerprint */}
+          {/* Profil der Woche */}
           <div
             style={{
               gridColumn: 2,
@@ -548,21 +536,10 @@ export function Dashboard() {
               display: "flex",
               flexDirection: "column",
               minWidth: 0,
+              overflow: "hidden",
             }}
           >
-            <PanelHead
-              eyebrow="Sprecher-Fingerprint"
-              title="Rhetorische Profile auf einen Blick"
-              hint="5 Merkmale × 16 Quartale (1990 → 2026) · 8 Top-Sprecher"
-              right={
-                <button type="button" className="btn-ghost">
-                  <Icon name="plus" size={12} /> Sprecher
-                </button>
-              }
-            />
-            <div style={{ flex: 1, padding: "10px 14px 12px", overflow: "hidden" }}>
-              <FingerprintGrid width={620} dark={dark} mps={heroMps} />
-            </div>
+            <MaverickCard />
           </div>
         </div>
       </div>

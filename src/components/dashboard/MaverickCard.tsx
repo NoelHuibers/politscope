@@ -1,100 +1,137 @@
-import { Icon } from "@/components/Icon";
+import { Link } from "@tanstack/react-router";
 import { PartyDot } from "@/components/PartyDot";
+import { PARTY, type PartyId } from "@/data/parties";
+import profilJson from "@/data/profil-der-woche.json";
 
-type Props = {
-  dense?: boolean;
+type ProfilDerWoche = {
+  generatedAt: string;
+  extId: string;
+  name: string;
+  party: string;
+  role: string | null;
+  speechCount: number;
+  reasonScore: number;
+  phrases: { phrase: string; weight: number; count: number }[];
 };
 
-export function MaverickCard({ dense = false }: Props) {
+const PROFIL = profilJson as ProfilDerWoche;
+
+/**
+ * Editorial-feel "Profil der Woche" card — picks the MP with the most
+ * distinctive vocabulary across the corpus. Generated weekly by
+ * `scripts/profil-der-woche.ts` and persisted to `src/data/profil-der-woche.json`.
+ */
+export function MaverickCard() {
+  const party = PARTY[PROFIL.party as PartyId];
+  const surname = PROFIL.name.split(" ").slice(-1).join("");
+
   return (
-    <div
+    <Link
+      to="/$locale/abgeordnete/$id"
+      params={{ locale: "de", id: PROFIL.extId }}
       style={{
-        background: "var(--panel-2)",
-        border: "1px solid var(--hairline)",
-        borderRadius: 6,
-        padding: dense ? "12px 14px" : "16px 18px",
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: 14,
+        padding: "18px 22px",
+        background: "var(--panel)",
+        textDecoration: "none",
+        color: "var(--ink)",
+        height: "100%",
+        boxSizing: "border-box",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <span className="t-eyebrow" style={{ color: "var(--accent)" }}>
-          Profil der Woche · KW 19
-        </span>
-        <span className="ki-tag">Redaktionell ausgewählt</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <PartyDot id="grn" size={10} />
-        <span
+      <div>
+        <div className="t-eyebrow" style={{ color: "var(--accent)", marginBottom: 8 }}>
+          Profil der Woche
+        </div>
+        <div
           style={{
             fontFamily: "var(--font-serif)",
-            fontSize: 22,
             fontWeight: 500,
+            fontSize: 26,
+            letterSpacing: "-0.01em",
+            lineHeight: 1.1,
             color: "var(--ink)",
-            letterSpacing: "-0.005em",
+            marginBottom: 6,
           }}
         >
-          Cem Özdemir
-        </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--muted)" }}>
-          Grüne · MdB
-        </span>
+          {PROFIL.name}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontFamily: "var(--font-sans)",
+            fontSize: 12,
+            color: "var(--ink-2)",
+            flexWrap: "wrap",
+          }}
+        >
+          {party && (
+            <>
+              <PartyDot id={PROFIL.party as PartyId} size={9} />
+              <span style={{ color: party.colorVar, fontWeight: 600 }}>{party.full}</span>
+            </>
+          )}
+          {PROFIL.role && (
+            <span style={{ color: "var(--muted)", fontSize: 11 }}>· {PROFIL.role}</span>
+          )}
+        </div>
       </div>
+
       <p
         style={{
           margin: 0,
-          fontFamily: "var(--font-sans)",
-          fontSize: 12.5,
-          lineHeight: 1.45,
+          fontFamily: "var(--font-serif)",
+          fontSize: 13.5,
+          lineHeight: 1.5,
           color: "var(--ink-2)",
         }}
       >
-        Bei Reden zur <b>Landwirtschaft</b> verwendet er Vokabular, das stärker mit SPD- und
-        FDP-Beiträgen übereinstimmt als mit dem Durchschnitt seiner eigenen Fraktion.{" "}
-        <span style={{ color: "var(--muted)" }}>Beobachtet seit 19. Wahlperiode.</span>
+        Über {PROFIL.speechCount} Reden hinweg fällt {surname} mit einer Sprache auf, die
+        statistisch deutlich vom übrigen Bundestag abweicht — besonders bei diesen Begriffen:
       </p>
-      <blockquote
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {PROFIL.phrases.map((p) => {
+          const scale = 1 + (p.weight / 12) * 0.4;
+          return (
+            <span
+              key={p.phrase}
+              style={{
+                fontFamily: "var(--font-sans)",
+                fontSize: 13 * scale,
+                fontWeight: 500,
+                padding: "5px 12px",
+                border: `1px solid ${party?.colorVar ?? "var(--hairline)"}`,
+                borderRadius: 14,
+                background: "var(--bg-2)",
+                color: party?.colorVar ?? "var(--ink)",
+              }}
+            >
+              {p.phrase}
+            </span>
+          );
+        })}
+      </div>
+
+      <div
         style={{
-          margin: 0,
-          padding: "10px 12px",
-          borderLeft: "2px solid var(--accent)",
-          fontFamily: "var(--font-serif)",
-          fontSize: 14,
-          fontStyle: "italic",
-          lineHeight: 1.4,
-          color: "var(--ink)",
+          marginTop: "auto",
+          fontFamily: "var(--font-mono)",
+          fontSize: 10,
+          color: "var(--muted)",
+          display: "flex",
+          justifyContent: "space-between",
         }}
       >
-        „Landwirtschaft braucht Verlässlichkeit, keinen ideologischen Zickzackkurs aus Berlin."
-        <div
-          style={{
-            fontStyle: "normal",
-            fontFamily: "var(--font-mono)",
-            fontSize: 9.5,
-            color: "var(--muted)",
-            marginTop: 6,
-            letterSpacing: "0.04em",
-          }}
-        >
-          18. APR 2024 · 184. SITZUNG · TOP 12 — illustrative Wiedergabe
-        </div>
-      </blockquote>
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-        <button type="button" className="btn-ghost">
-          <Icon name="book" size={12} /> 14 Beispielreden
-        </button>
-        <button type="button" className="btn-ghost">
-          <Icon name="info" size={12} /> Wie wird das berechnet?
-        </button>
+        <span>
+          Top-z {PROFIL.reasonScore.toFixed(2)} · {PROFIL.speechCount} Reden
+        </span>
+        <span>Profil ansehen →</span>
       </div>
-    </div>
+    </Link>
   );
 }

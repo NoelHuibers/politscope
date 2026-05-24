@@ -1,0 +1,26 @@
+{
+  "generatedAt": "2026-05-24T12:50:24.275Z",
+  "extId": "11005089",
+  "name": "Verena Hubertz",
+  "party": "spd",
+  "role": "Bundesministerin für Wohnen, Stadtentwicklung und Bauwesen",
+  "phrases": [
+    {
+      "phrase": "nachfrage",
+      "weight": 7.657262215128828,
+      "count": 15
+    },
+    {
+      "phrase": "wohnraum",
+      "weight": 5.955629988150694,
+      "count": 9
+    },
+    {
+      "phrase": "bauturbo",
+      "weight": 5.353512866060761,
+      "count": 8
+    }
+  ],
+  "reasonScore": 7.657262215128828,
+  "speechCount": 25
+}
