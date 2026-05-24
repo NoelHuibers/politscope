@@ -116,6 +116,15 @@ export function TopBar() {
       <div style={{ flex: 1 }} />
 
       <Link
+        to="/$locale/atlas"
+        params={{ locale: currentLocale }}
+        className="btn-ghost"
+        activeOptions={{ exact: true }}
+        style={{ textDecoration: "none" }}
+      >
+        Atlas
+      </Link>
+      <Link
         to="/$locale/abgeordnete"
         params={{ locale: currentLocale }}
         className="btn-ghost"

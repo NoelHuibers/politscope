@@ -85,7 +85,7 @@ export function InsufficientDataFrame({ speechCount, threshold, mpName }: Props)
           → Übersicht aller Abgeordneten
         </Link>
         <Link
-          to="/$locale"
+          to="/$locale/atlas"
           params={{ locale: "de" }}
           style={{ color: "var(--muted)", textDecoration: "none" }}
         >
