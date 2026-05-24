@@ -15,22 +15,49 @@ export type AtlasResponse = {
   points: AtlasPoint[];
   /** Total speeches in the DB (including those without embeddings yet). */
   total: number;
-  /** Speeches that have a UMAP projection (i.e., would be rendered). */
+  /** Speeches that have a UMAP projection AND match the active filters. */
   projected: number;
 };
 
+export type AtlasFilters = {
+  /** Restrict to these party enum values. undefined = no party filter. */
+  parties?: string[];
+  /** Restrict to this Wahlperiode. undefined = all Wahlperioden. */
+  wahlperiode?: number;
+};
+
 /**
- * Tracer-bullet atlas endpoint: returns every speech that has UMAP coords + a known party.
+ * Atlas points server function with optional party / wahlperiode filters.
  *
- * Naive impl — no pagination, no filtering, no caching. Replaced by the real
- * paginated version in #25. Acceptable here because the tracer dataset is
- * ~174 points; #45 explicitly accepts that.
- *
- * Server-only: the import of `db` ties this file to Neon. Vite's tree-shaking
- * (via the `createServerFn` factory) keeps it out of the client bundle.
+ * Normalisation: x/y are min/max-scaled to [-1, 1] over the FILTERED result set
+ * — so when you filter to AfD-only, the AfD subcloud fills the viewport instead
+ * of being squished into a corner. If we ever want absolute-coords-stable
+ * filtering for cross-filter comparisons, that's a follow-up.
  */
-export const getAtlasPoints = createServerFn({ method: "GET" }).handler(
-  async (): Promise<AtlasResponse> => {
+export const getAtlasPoints = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown): AtlasFilters => {
+    if (input === null || input === undefined) return {};
+    if (typeof input !== "object") return {};
+    const obj = input as { parties?: unknown; wahlperiode?: unknown };
+    // `parties === undefined` means "no party filter"; `parties === []` means
+    // "filter to no parties → expect zero results". Preserve the distinction.
+    const parties =
+      Array.isArray(obj.parties) && obj.parties.every((p) => typeof p === "string")
+        ? (obj.parties as string[])
+        : undefined;
+    const wahlperiode =
+      typeof obj.wahlperiode === "number" && Number.isFinite(obj.wahlperiode)
+        ? Math.floor(obj.wahlperiode)
+        : undefined;
+    return { parties, wahlperiode };
+  })
+  .handler(async ({ data }): Promise<AtlasResponse> => {
+    // parties === undefined → no filter; parties === [] → match nothing; parties === [...] → match those.
+    const partyFilterSql =
+      data.parties === undefined ? sql`` : sql`AND m.party::text = ANY(${data.parties}::text[])`;
+    const wpFilterSql =
+      data.wahlperiode === undefined ? sql`` : sql`AND se.wahlperiode = ${data.wahlperiode}`;
+
     const projected = await db.execute<{
       id: string;
       umap_x: number;
@@ -40,14 +67,24 @@ export const getAtlasPoints = createServerFn({ method: "GET" }).handler(
       SELECT s.id::text AS id, s.umap_x, s.umap_y, m.party::text AS party
       FROM speeches s
       LEFT JOIN mps m ON s.mp_id = m.id
+      LEFT JOIN sessions se ON s.session_id = se.id
       WHERE s.umap_x IS NOT NULL AND s.umap_y IS NOT NULL AND m.party IS NOT NULL
+      ${partyFilterSql}
+      ${wpFilterSql}
     `);
 
     const totalResult = await db.execute<{ count: string }>(
       sql`SELECT count(*)::text AS count FROM speeches`,
     );
 
-    // Find min/max for normalization to [-1, 1].
+    if (projected.rows.length === 0) {
+      return {
+        points: [],
+        total: Number(totalResult.rows[0]?.count ?? 0),
+        projected: 0,
+      };
+    }
+
     let minX = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
     let minY = Number.POSITIVE_INFINITY;
@@ -73,5 +110,4 @@ export const getAtlasPoints = createServerFn({ method: "GET" }).handler(
       total: Number(totalResult.rows[0]?.count ?? 0),
       projected: points.length,
     };
-  },
-);
+  });

@@ -13,10 +13,14 @@ import { SankeyTimeline } from "@/components/viz/SankeyTimeline";
 import { Scattertext } from "@/components/viz/Scattertext";
 import { Sparkline } from "@/components/viz/Sparkline";
 import { MPS } from "@/data/mps";
+import { PARTIES } from "@/data/parties";
 import { formatGerman, useCorpusStats } from "@/lib/hooks/useCorpusStats";
 import { getAtlasPoints } from "@/lib/server/atlas";
+import { useFilters } from "@/state/filters";
 import { useUI } from "@/state/ui";
 import { PanelHead } from "./PanelHead";
+
+const ALL_PARTY_IDS = PARTIES.map((p) => p.id);
 
 const HERO_SPEAKERS = [
   "merz",
@@ -37,9 +41,19 @@ export function Dashboard() {
 
   const [hoveredId, setHoveredId] = useState<string | null>("oezdemir");
 
+  const [filters] = useFilters();
+  // Filter semantics:
+  // - parties === ALL → send undefined (= no filter, skip WHERE)
+  // - parties === [] → send [] (= match nothing, expected to return zero rows)
+  // - parties === [subset] → send that subset
+  const partyFilter =
+    filters.parties.length === ALL_PARTY_IDS.length ? undefined : [...filters.parties].sort();
+  const wpFilter = filters.period;
+
   const atlasQuery = useQuery({
-    queryKey: ["atlas-points"],
-    queryFn: () => getAtlasPoints(),
+    queryKey: ["atlas-points", partyFilter ?? "ALL", wpFilter],
+    queryFn: () =>
+      getAtlasPoints({ data: { parties: partyFilter, wahlperiode: wpFilter ?? undefined } }),
   });
   const statsQuery = useCorpusStats();
   const openSpeechInspector = useUI((s) => s.openSpeechInspector);
@@ -179,6 +193,40 @@ export function Dashboard() {
                   realPoints={atlasQuery.data?.points ?? null}
                   onPointClick={openSpeechInspector}
                 />
+                {atlasQuery.data && atlasQuery.data.projected === 0 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      pointerEvents: "none",
+                      zIndex: 3,
+                    }}
+                  >
+                    <div
+                      style={{
+                        background: "var(--panel)",
+                        border: "1px solid var(--hairline)",
+                        borderRadius: 8,
+                        padding: "16px 24px",
+                        fontFamily: "var(--font-sans)",
+                        fontSize: 13,
+                        color: "var(--ink-2)",
+                        textAlign: "center",
+                        boxShadow: "var(--shadow-sm)",
+                        pointerEvents: "auto",
+                      }}
+                    >
+                      Keine Reden für diese Auswahl.
+                      <br />
+                      <span style={{ color: "var(--muted)", fontSize: 11 }}>
+                        Filter anpassen oder zurücksetzen.
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div

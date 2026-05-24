@@ -145,7 +145,12 @@
       }
     },
     {
-      "includes": ["src/lib/db/**/*.ts", "drizzle.config.ts", "scripts/**/*.ts"],
+      "includes": [
+        "src/lib/db/**/*.ts",
+        "src/lib/server/**/*.ts",
+        "drizzle.config.ts",
+        "scripts/**/*.ts"
+      ],
       "linter": {
         "rules": {
           "correctness": {

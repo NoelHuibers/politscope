@@ -58,6 +58,11 @@ export function LeftRail() {
 
   const reset = () => setFilters({ parties: null, period: null, topic: null });
 
+  // True when any filter differs from defaults — drives the reset-button styling
+  // and the "Filter aktiv" affordance.
+  const filtersActive =
+    filters.parties.length !== PARTIES.length || filters.period !== 21 || filters.topic !== null;
+
   if (collapsed) {
     return (
       <aside
@@ -312,9 +317,17 @@ export function LeftRail() {
         type="button"
         onClick={reset}
         className="btn-ghost"
-        style={{ alignSelf: "flex-start" }}
+        disabled={!filtersActive}
+        style={{
+          alignSelf: "flex-start",
+          opacity: filtersActive ? 1 : 0.45,
+          color: filtersActive ? "var(--accent)" : "var(--muted)",
+          fontWeight: filtersActive ? 600 : 400,
+          cursor: filtersActive ? "pointer" : "default",
+        }}
       >
-        <Icon name="reset" size={12} /> {m.leftrail_reset_filters()}
+        <Icon name="reset" size={12} color={filtersActive ? "var(--accent)" : "var(--muted)"} />{" "}
+        {m.leftrail_reset_filters()}
       </button>
     </aside>
   );

@@ -136,8 +136,23 @@ export function EmbeddingMap({
         );
       })}
 
-      {realPoints && realPoints.length > 0
-        ? realPoints.map((p) => {
+      {realPoints === null
+        ? points.map((p, i) => {
+            const dim = highlightTopic && highlightTopic !== p.tid;
+            const isFresh = p.fresh && newThisWeek;
+            return (
+              <circle
+                // biome-ignore lint/suspicious/noArrayIndexKey: stable seeded order, no insertions
+                key={i}
+                cx={X(p.x)}
+                cy={Y(p.y)}
+                r={isFresh ? 2.2 : 1.2}
+                fill={isFresh ? "var(--accent)" : dim ? dotColorDim : dotColor}
+                opacity={isFresh ? 1 : dim ? 1 : 0.92}
+              />
+            );
+          })
+        : realPoints.map((p) => {
             const partyDef = PARTY[p.party as PartyId];
             const fill = partyDef ? partyDef.colorVar : dotColor;
             return (
@@ -153,21 +168,6 @@ export function EmbeddingMap({
               >
                 {onPointClick && <title>Klick: Rede ansehen</title>}
               </circle>
-            );
-          })
-        : points.map((p, i) => {
-            const dim = highlightTopic && highlightTopic !== p.tid;
-            const isFresh = p.fresh && newThisWeek;
-            return (
-              <circle
-                // biome-ignore lint/suspicious/noArrayIndexKey: stable seeded order, no insertions
-                key={i}
-                cx={X(p.x)}
-                cy={Y(p.y)}
-                r={isFresh ? 2.2 : 1.2}
-                fill={isFresh ? "var(--accent)" : dim ? dotColorDim : dotColor}
-                opacity={isFresh ? 1 : dim ? 1 : 0.92}
-              />
             );
           })}
 
