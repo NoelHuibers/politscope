@@ -115,40 +115,72 @@ export function Scattertext({
         </text>
       </g>
 
-      {rows.map((s) => {
-        const sz = 9 + s.f * 5;
-        const isHi = hoveredW === s.w;
-        const dim = hoveredW && hoveredW !== s.w;
-        // Convention: x > 0 → partyA, x < 0 → partyB.
-        const fill =
-          s.x > 0.4
-            ? A.id === "cdu"
-              ? "var(--ink)"
-              : A.colorVar
-            : s.x < -0.4
-              ? B.id === "cdu"
+      {(() => {
+        // Greedy collision avoidance: sort by importance (|x| × f) and place
+        // each label only if its bounding rect doesn't overlap a placed one.
+        type Placed = {
+          row: Row;
+          cx: number;
+          cy: number;
+          sz: number;
+          rect: { x0: number; y0: number; x1: number; y1: number };
+        };
+        const scored = rows.map((s) => ({ s, score: Math.abs(s.x) * s.f }));
+        scored.sort((a, b) => b.score - a.score);
+        const placed: Placed[] = [];
+        const PAD_PX = 1;
+        for (const { s } of scored) {
+          const sz = 9 + s.f * 5;
+          const cx = X(s.x);
+          const cy = Y(s.f);
+          // Rough em width — fits "Wirtschaft" without measuring.
+          const w = s.w.length * sz * 0.55;
+          const h = sz;
+          const r = {
+            x0: cx - w / 2 - PAD_PX,
+            y0: cy - h * 0.85,
+            x1: cx + w / 2 + PAD_PX,
+            y1: cy + h * 0.2,
+          };
+          const overlap = placed.some(
+            (p) => r.x0 < p.rect.x1 && r.x1 > p.rect.x0 && r.y0 < p.rect.y1 && r.y1 > p.rect.y0,
+          );
+          if (overlap) continue;
+          placed.push({ row: s, cx, cy, sz, rect: r });
+        }
+        return placed.map(({ row: s, cx, cy, sz }) => {
+          const isHi = hoveredW === s.w;
+          const dim = hoveredW && hoveredW !== s.w;
+          const fill =
+            s.x > 0.4
+              ? A.id === "cdu"
                 ? "var(--ink)"
-                : B.colorVar
-              : "var(--muted)";
-        return (
-          <text
-            key={s.w}
-            x={X(s.x)}
-            y={Y(s.f)}
-            fontFamily="var(--font-sans)"
-            fontSize={sz}
-            fontWeight={isHi ? 700 : 500}
-            fill={fill}
-            opacity={dim ? 0.25 : 1}
-            textAnchor="middle"
-            onMouseEnter={() => handleHover(s.w)}
-            onMouseLeave={() => handleHover(null)}
-            style={{ cursor: "pointer" }}
-          >
-            {s.w}
-          </text>
-        );
-      })}
+                : A.colorVar
+              : s.x < -0.4
+                ? B.id === "cdu"
+                  ? "var(--ink)"
+                  : B.colorVar
+                : "var(--muted)";
+          return (
+            <text
+              key={s.w}
+              x={cx}
+              y={cy}
+              fontFamily="var(--font-sans)"
+              fontSize={sz}
+              fontWeight={isHi ? 700 : 500}
+              fill={fill}
+              opacity={dim ? 0.25 : 1}
+              textAnchor="middle"
+              onMouseEnter={() => handleHover(s.w)}
+              onMouseLeave={() => handleHover(null)}
+              style={{ cursor: "pointer" }}
+            >
+              {s.w}
+            </text>
+          );
+        });
+      })()}
     </svg>
   );
 }

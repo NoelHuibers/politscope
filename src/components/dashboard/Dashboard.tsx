@@ -288,9 +288,17 @@ export function Dashboard() {
             }}
           >
             <PanelHead
-              eyebrow="Themenfluss · 1990 → heute"
+              eyebrow={
+                topicFlowsQuery.data && topicFlowsQuery.data.periods.length > 0
+                  ? `Themenfluss · ${topicFlowsQuery.data.periods[0]?.label} → ${topicFlowsQuery.data.periods[topicFlowsQuery.data.periods.length - 1]?.label}`
+                  : "Themenfluss"
+              }
               title="Wie Themen über Wahlperioden wachsen, schrumpfen, sich verschieben"
-              hint="Aktuell hervorgehoben: Migration"
+              hint={
+                topicFilter
+                  ? `Hervorgehoben: ${topicFlowsQuery.data?.bands.find((b) => b.topicId === topicFilter)?.label ?? topicFilter}`
+                  : "Klick auf Cluster im Atlas zum Hervorheben"
+              }
               right={
                 <div
                   style={{

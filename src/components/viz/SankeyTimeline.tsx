@@ -65,7 +65,8 @@ export function SankeyTimeline({
   highlightTopicId = null,
   realFlows = null,
 }: Props) {
-  const pad = { l: 10, r: 56, t: 10, b: 22 };
+  // Right padding sized for German cluster labels like "erneuerbaren · merz".
+  const pad = { l: 10, r: 130, t: 10, b: 22 };
   const W = width;
   const H = height;
   const innerW = W - pad.l - pad.r;
