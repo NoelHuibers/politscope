@@ -8,6 +8,7 @@ import { SpeechListItem } from "@/components/SpeechListItem";
 import { type MP, MPS } from "@/data/mps";
 import { PARTY, type PartyId } from "@/data/parties";
 import { getSpeechesByMp, type MpProfile as MpProfileData } from "@/lib/server/directory";
+import { getMpDistinctivePhrases } from "@/lib/server/distinctive";
 import { useUI } from "@/state/ui";
 import { ProfileSection } from "./ProfileSection";
 import { Stat } from "./Stat";
@@ -124,6 +125,14 @@ export function MPProfile({ mpId, realProfile = null }: Props) {
     queryFn: () => {
       if (!realExtId) throw new Error("no extId");
       return getSpeechesByMp({ data: realExtId });
+    },
+    enabled: realExtId !== null,
+  });
+  const distinctiveQuery = useQuery({
+    queryKey: ["distinctive-phrases", realExtId],
+    queryFn: () => {
+      if (!realExtId) throw new Error("no extId");
+      return getMpDistinctivePhrases({ data: realExtId });
     },
     enabled: realExtId !== null,
   });
@@ -492,28 +501,73 @@ export function MPProfile({ mpId, realProfile = null }: Props) {
 
             <ProfileSection
               title="Charakteristische Wendungen"
-              eyebrow="Scattertext für eine Person"
-              hint={`Phrasen, die ${last ?? mp.name} signifikant häufiger nutzt als der Bundestag insgesamt.`}
+              eyebrow="Log-Odds-Ratio mit Dirichlet-Prior"
+              hint={`Wörter, die ${last ?? mp.name} signifikant häufiger nutzt als der Bundestag insgesamt.`}
+              ki
             >
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {DISTINCTIVE_PHRASES.map(([w, s]) => (
-                  <span
-                    key={w}
-                    style={{
-                      fontFamily: "var(--font-sans)",
-                      fontSize: 12 * s,
-                      fontWeight: 500,
-                      padding: "4px 10px",
-                      border: "1px solid var(--hairline)",
-                      borderRadius: 12,
-                      background: "var(--bg-2)",
-                      color: "var(--ink)",
-                    }}
-                  >
-                    {w}
-                  </span>
-                ))}
-              </div>
+              {(() => {
+                if (!realExtId) {
+                  return (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {DISTINCTIVE_PHRASES.map(([w, s]) => (
+                        <span
+                          key={w}
+                          style={{
+                            fontFamily: "var(--font-sans)",
+                            fontSize: 12 * s,
+                            fontWeight: 500,
+                            padding: "4px 10px",
+                            border: "1px solid var(--hairline)",
+                            borderRadius: 12,
+                            background: "var(--bg-2)",
+                            color: "var(--ink)",
+                          }}
+                        >
+                          {w}
+                        </span>
+                      ))}
+                    </div>
+                  );
+                }
+                if (distinctiveQuery.isPending) {
+                  return <div style={{ color: "var(--muted)", fontSize: 13 }}>Berechne…</div>;
+                }
+                const phrases = distinctiveQuery.data ?? [];
+                if (phrases.length === 0) {
+                  return (
+                    <div style={{ color: "var(--muted)", fontSize: 13 }}>
+                      Zu wenige Reden für statistische Auswertung.
+                    </div>
+                  );
+                }
+                // Normalise weight (z-score) to a font-size multiplier.
+                const maxWeight = Math.max(...phrases.map((p) => p.weight));
+                return (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {phrases.map((p) => {
+                      const scale = 0.9 + (p.weight / maxWeight) * 0.7;
+                      return (
+                        <span
+                          key={p.phrase}
+                          title={`Wert: z=${p.weight.toFixed(2)} · ${p.count}× in Reden`}
+                          style={{
+                            fontFamily: "var(--font-sans)",
+                            fontSize: 12 * scale,
+                            fontWeight: 500,
+                            padding: "4px 10px",
+                            border: "1px solid var(--hairline)",
+                            borderRadius: 12,
+                            background: "var(--bg-2)",
+                            color: "var(--ink)",
+                          }}
+                        >
+                          {p.phrase}
+                        </span>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </ProfileSection>
           </div>
         </div>
