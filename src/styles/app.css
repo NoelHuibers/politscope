@@ -74,6 +74,9 @@
   --map-grid: rgba(20, 18, 12, 0.04);
   --p-cdu-display: #111111;
   --p-cdu-ring: rgba(0, 0, 0, 0);
+  /* Text-context CDU colour — same as display in light mode, swapped to ink in dark
+     where pure black is unreadable. Use for labels, axis text, badge text. */
+  --p-cdu-text: #111111;
 }
 
 /* DARK MODE */
@@ -94,11 +97,13 @@
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
   --map-bg: #0a0c10;
   --map-grid: rgba(255, 255, 250, 0.03);
-  /* CDU "black" on dark → flip to a light grey that mirrors the atlas RGB
-     `[180, 180, 188]`. Keeps party identity (neutral / centre) while
-     reading legibly against the dark panel background. */
-  --p-cdu-display: #b4b4bc;
-  --p-cdu-ring: rgba(232, 230, 224, 0.25);
+  /* CDU "black" on dark → keep as deep ink with a strong white ring so
+     the dot still reads as CDU (institutional black) without disappearing
+     into the panel. Text contexts use --p-cdu-text below. */
+  --p-cdu-display: #1a1a1d;
+  --p-cdu-ring: rgba(232, 230, 224, 0.6);
+  /* In dark mode, CDU text must not be black. Use the standard ink colour. */
+  --p-cdu-text: #e8e6e0;
 }
 
 @layer base {

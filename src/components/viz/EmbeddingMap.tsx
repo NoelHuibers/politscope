@@ -294,7 +294,7 @@ export function EmbeddingMap({
                     flexShrink: 0,
                   }}
                 />
-                <span style={{ fontWeight: 600, color: p.def.colorVar }}>{p.def.name}</span>
+                <span style={{ fontWeight: 600, color: p.def.textColorVar }}>{p.def.name}</span>
                 <span
                   style={{
                     color: "var(--muted)",

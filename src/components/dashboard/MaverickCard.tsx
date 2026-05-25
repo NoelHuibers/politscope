@@ -69,7 +69,7 @@ export function MaverickCard() {
               fontFamily: "var(--font-sans)",
               fontSize: 10.5,
               fontWeight: 600,
-              color: party.colorVar,
+              color: party.textColorVar,
               whiteSpace: "nowrap",
             }}
           >
@@ -105,10 +105,10 @@ export function MaverickCard() {
               fontSize: 11.5,
               fontWeight: 500,
               padding: "2px 8px",
-              border: `1px solid ${party?.colorVar ?? "var(--hairline)"}`,
+              border: `1px solid ${party?.textColorVar ?? "var(--hairline)"}`,
               borderRadius: 11,
               background: "var(--bg-2)",
-              color: party?.colorVar ?? "var(--ink)",
+              color: party?.textColorVar ?? "var(--ink)",
             }}
           >
             {p.phrase}

@@ -198,7 +198,7 @@ function PartyLabel({ party }: { party: PartyId }) {
           fontFamily: "var(--font-sans)",
           fontSize: 12,
           fontWeight: 600,
-          color: p.colorVar,
+          color: p.textColorVar,
         }}
       >
         {p.full}

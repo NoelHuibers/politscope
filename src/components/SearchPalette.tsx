@@ -105,7 +105,7 @@ export function SearchPalette({ open, onOpenChange, onSelectSpeech }: Props) {
                     {party && <PartyDot id={hit.mp.party as PartyId} size={8} />}
                     <span className="font-semibold text-foreground">{hit.mp.name}</span>
                     {party && (
-                      <span style={{ color: party.colorVar }} className="text-[11px]">
+                      <span style={{ color: party.textColorVar }} className="text-[11px]">
                         {party.name}
                       </span>
                     )}

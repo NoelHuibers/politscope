@@ -76,7 +76,7 @@ export function SpeechInspector({ speechId, onOpenChange }: Props) {
                   {party && (
                     <span className="inline-flex items-center gap-1.5">
                       <PartyDot id={speech.mp?.party as PartyId} size={9} />
-                      <span className="font-semibold" style={{ color: party.colorVar }}>
+                      <span className="font-semibold" style={{ color: party.textColorVar }}>
                         {party.full}
                       </span>
                     </span>

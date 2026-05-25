@@ -10,6 +10,11 @@ export type Party = {
   full: string;
   /** CSS variable reference (e.g., `var(--color-p-cdu)`) so it switches with theme */
   colorVar: string;
+  /**
+   * Text-context colour. Same as colorVar for most parties, but CDU swaps to
+   * ink in dark mode (pure black on dark panel is unreadable for labels).
+   */
+  textColorVar: string;
   /** Optional ring var — used for CDU on dark mode */
   ringVar?: string;
   shape: PartyShape;
@@ -25,6 +30,7 @@ export const PARTIES: readonly Party[] = [
     name: "CDU",
     full: "Christlich Demokratische Union",
     colorVar: "var(--p-cdu-display, var(--color-p-cdu))",
+    textColorVar: "var(--p-cdu-text, var(--color-p-cdu))",
     ringVar: "var(--p-cdu-ring, transparent)",
     shape: "circle",
     rgb: [17, 17, 17],
@@ -35,6 +41,7 @@ export const PARTIES: readonly Party[] = [
     name: "SPD",
     full: "Sozialdemokratische Partei Deutschlands",
     colorVar: "var(--color-p-spd)",
+    textColorVar: "var(--color-p-spd)",
     shape: "circle",
     rgb: [200, 16, 46],
   },
@@ -43,6 +50,7 @@ export const PARTIES: readonly Party[] = [
     name: "Grüne",
     full: "Bündnis 90/Die Grünen",
     colorVar: "var(--color-p-grn)",
+    textColorVar: "var(--color-p-grn)",
     shape: "triangle",
     rgb: [74, 138, 44],
   },
@@ -51,6 +59,7 @@ export const PARTIES: readonly Party[] = [
     name: "FDP",
     full: "Freie Demokratische Partei",
     colorVar: "var(--color-p-fdp)",
+    textColorVar: "var(--color-p-fdp)",
     shape: "diamond",
     rgb: [235, 205, 20],
   },
@@ -59,6 +68,7 @@ export const PARTIES: readonly Party[] = [
     name: "Linke",
     full: "Die Linke",
     colorVar: "var(--color-p-lnk)",
+    textColorVar: "var(--color-p-lnk)",
     shape: "square",
     rgb: [179, 20, 127],
   },
@@ -67,6 +77,7 @@ export const PARTIES: readonly Party[] = [
     name: "AfD",
     full: "Alternative für Deutschland",
     colorVar: "var(--color-p-afd)",
+    textColorVar: "var(--color-p-afd)",
     shape: "hex",
     rgb: [31, 109, 190],
   },
@@ -75,6 +86,7 @@ export const PARTIES: readonly Party[] = [
     name: "CSU",
     full: "Christlich-Soziale Union",
     colorVar: "var(--color-p-csu)",
+    textColorVar: "var(--color-p-csu)",
     shape: "circle",
     rgb: [78, 163, 216],
   },
@@ -83,6 +95,7 @@ export const PARTIES: readonly Party[] = [
     name: "BSW",
     full: "Bündnis Sahra Wagenknecht",
     colorVar: "var(--color-p-bsw)",
+    textColorVar: "var(--color-p-bsw)",
     shape: "triangle",
     rgb: [111, 78, 168],
   },

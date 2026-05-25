@@ -70,7 +70,7 @@ export function SpeechListItem({
           <span style={{ color: "var(--muted)" }}>Unbekannte Sprecher:in</span>
         )}
         {party && showSpeaker && (
-          <span style={{ color: party.colorVar, fontSize: 11 }}>{party.name}</span>
+          <span style={{ color: party.textColorVar, fontSize: 11 }}>{party.name}</span>
         )}
         {showSession && (
           <span style={{ color: "var(--muted)", marginLeft: "auto", fontSize: 11 }}>

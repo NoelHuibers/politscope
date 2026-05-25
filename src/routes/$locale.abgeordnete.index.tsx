@@ -169,7 +169,7 @@ function MpDirectory() {
                     style={{
                       fontFamily: "var(--font-sans)",
                       fontSize: 11,
-                      color: party?.colorVar ?? "var(--muted)",
+                      color: party?.textColorVar ?? "var(--muted)",
                       fontWeight: 600,
                     }}
                   >
@@ -290,7 +290,9 @@ function MpDirectory() {
                       {party ? (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                           <PartyDot id={mp.party as PartyId} size={8} />
-                          <span style={{ color: party.colorVar, fontWeight: 600, fontSize: 12 }}>
+                          <span
+                            style={{ color: party.textColorVar, fontWeight: 600, fontSize: 12 }}
+                          >
                             {party.full}
                           </span>
                         </span>
