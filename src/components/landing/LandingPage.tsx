@@ -570,6 +570,20 @@ export function LandingPage() {
             >
               Methodik
             </button>
+            <Link
+              to="/$locale/impressum"
+              params={{ locale }}
+              style={{ color: "var(--ink-2)", textDecoration: "none" }}
+            >
+              Impressum
+            </Link>
+            <Link
+              to="/$locale/datenschutz"
+              params={{ locale }}
+              style={{ color: "var(--ink-2)", textDecoration: "none" }}
+            >
+              Datenschutz
+            </Link>
             <a
               href="https://github.com/NoelHuibers/politscope"
               target="_blank"

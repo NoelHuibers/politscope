@@ -130,15 +130,27 @@ export function BottomStrip() {
         style={{
           display: "flex",
           alignItems: "baseline",
-          gap: 6,
+          gap: 10,
           justifyContent: "flex-end",
           fontFamily: "var(--font-sans)",
           fontSize: 11,
+          flexWrap: "wrap",
         }}
       >
-        <span className="t-eyebrow" style={{ fontSize: 10, color: "var(--muted)" }}>
-          {m.bottom_data_source()}
-        </span>
+        <Link
+          to="/$locale/impressum"
+          params={{ locale: "de" }}
+          style={{ color: "var(--muted)", textDecoration: "none" }}
+        >
+          Impressum
+        </Link>
+        <Link
+          to="/$locale/datenschutz"
+          params={{ locale: "de" }}
+          style={{ color: "var(--muted)", textDecoration: "none" }}
+        >
+          Datenschutz
+        </Link>
         <span style={{ color: "var(--ink-2)" }}>bundestag.de</span>
         <span style={{ color: "var(--accent)" }}>· {m.bottom_active()}</span>
       </div>
