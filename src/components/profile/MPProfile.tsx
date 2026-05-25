@@ -8,6 +8,7 @@ import { PartyDot } from "@/components/PartyDot";
 import { SpeechListItem } from "@/components/SpeechListItem";
 import { FingerprintGrid } from "@/components/viz/FingerprintGrid";
 import { PARTY, type PartyId } from "@/data/parties";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import {
   getSpeechesByMp,
   type MpPhoto as MpPhotoData,
@@ -207,6 +208,7 @@ function PartyLabel({ party }: { party: PartyId }) {
 }
 
 export function MPProfile({ realProfile }: Props) {
+  const isMobile = useIsMobile();
   const openSpeechInspector = useUI((s) => s.openSpeechInspector);
 
   const extId = realProfile.extId;
@@ -259,10 +261,10 @@ export function MPProfile({ realProfile }: Props) {
           className="scroll-y"
           style={{
             flex: 1,
-            padding: "26px 32px 18px",
+            padding: isMobile ? "18px 16px 16px" : "26px 32px 18px",
             display: "grid",
-            gridTemplateColumns: "240px 1fr",
-            gap: 28,
+            gridTemplateColumns: isMobile ? "1fr" : "240px 1fr",
+            gap: isMobile ? 18 : 28,
             overflowY: "auto",
             minWidth: 0,
           }}

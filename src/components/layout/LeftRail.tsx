@@ -3,6 +3,7 @@ import { PartyDot } from "@/components/PartyDot";
 import { PARTIES, type PartyId } from "@/data/parties";
 import { PERIODS } from "@/data/periods";
 import { formatGerman, useCorpusStats } from "@/lib/hooks/useCorpusStats";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import * as m from "@/paraglide/messages";
 import { useFilters } from "@/state/filters";
 import { useUI } from "@/state/ui";
@@ -34,10 +35,161 @@ function quarterLabel(iso: string | null | undefined): string {
   return `Q${q} ${year}`;
 }
 
+type FiltersSnapshot = {
+  parties: string[];
+  period: number;
+  topic: string | null;
+};
+
+type RailBodyProps = {
+  earliestDate: string | null | undefined;
+  latestDate: string | null | undefined;
+  totalSpeeches: number | undefined;
+  availableWps: number[];
+  speechesByParty: Record<string, number>;
+  filters: FiltersSnapshot;
+  activeSet: Set<string>;
+  toggleParty: (id: PartyId) => void;
+  setPeriod: (id: number) => void;
+  reset: () => void;
+  filtersActive: boolean;
+};
+
+function RailBody({
+  earliestDate,
+  latestDate,
+  totalSpeeches,
+  availableWps,
+  speechesByParty,
+  filters,
+  activeSet,
+  toggleParty,
+  setPeriod,
+  reset,
+  filtersActive,
+}: RailBodyProps) {
+  return (
+    <>
+      <div>
+        <h4 style={SECTION_HEAD}>{m.leftrail_period()}</h4>
+        <div
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
+            color: "var(--ink-2)",
+            marginBottom: 4,
+          }}
+        >
+          {quarterLabel(earliestDate)} – {quarterLabel(latestDate)}
+        </div>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--muted)" }}>
+          {formatGerman(totalSpeeches)} Reden im Korpus
+        </div>
+      </div>
+
+      <div>
+        <h4 style={SECTION_HEAD}>{m.leftrail_wahlperiode()}</h4>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
+          {PERIODS.filter((p) => availableWps.includes(p.id)).map((p) => {
+            const on = filters.period === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setPeriod(p.id)}
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  fontWeight: 600,
+                  padding: "6px 0",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  border: "1px solid var(--hairline)",
+                  background: on ? "var(--ink)" : "transparent",
+                  color: on ? "var(--bg)" : "var(--ink-2)",
+                }}
+              >
+                {p.id}.
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <h4 style={SECTION_HEAD}>{m.leftrail_factions()}</h4>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {PARTIES.map((p) => {
+            const on = activeSet.has(p.id);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => toggleParty(p.id)}
+                aria-pressed={on}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                  padding: "3px 6px",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  background: on ? "var(--bg-2)" : "transparent",
+                  border: `1px solid ${on ? "var(--hairline)" : "transparent"}`,
+                  textAlign: "left",
+                }}
+              >
+                <PartyDot id={p.id} size={8} />
+                <span
+                  style={{
+                    flex: 1,
+                    fontFamily: "var(--font-sans)",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: on ? "var(--ink)" : "var(--ink-2)",
+                  }}
+                >
+                  {p.name}
+                </span>
+                <span
+                  style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--muted)" }}
+                >
+                  {compactCount(speechesByParty[p.id])}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ flex: 1 }} />
+      <button
+        type="button"
+        onClick={reset}
+        className="btn-ghost"
+        disabled={!filtersActive}
+        style={{
+          alignSelf: "flex-start",
+          opacity: filtersActive ? 1 : 0.45,
+          color: filtersActive ? "var(--accent)" : "var(--muted)",
+          fontWeight: filtersActive ? 600 : 400,
+          cursor: filtersActive ? "pointer" : "default",
+        }}
+      >
+        <Icon name="reset" size={12} color={filtersActive ? "var(--accent)" : "var(--muted)"} />{" "}
+        {m.leftrail_reset_filters()}
+      </button>
+    </>
+  );
+}
+
 export function LeftRail() {
   const [filters, setFilters] = useFilters();
   const collapsed = useUI((s) => s.leftRailCollapsed);
   const toggle = useUI((s) => s.toggleLeftRail);
+  const isMobile = useIsMobile();
+  const mobileOpen = useUI((s) => s.mobileRailOpen);
+  const setMobileOpen = useUI((s) => s.setMobileRailOpen);
   const stats = useCorpusStats();
   const availableWps = stats.data?.availableWps ?? [];
   const speechesByParty = stats.data?.speechesByParty ?? {};
@@ -55,10 +207,87 @@ export function LeftRail() {
 
   const reset = () => setFilters({ parties: null, period: null, topic: null });
 
-  // True when any filter differs from defaults — drives the reset-button styling
-  // and the "Filter aktiv" affordance.
   const filtersActive =
     filters.parties.length !== PARTIES.length || filters.period !== 21 || filters.topic !== null;
+
+  const bodyProps: RailBodyProps = {
+    earliestDate: stats.data?.earliestDate,
+    latestDate: stats.data?.latestDate,
+    totalSpeeches: stats.data?.totalSpeeches,
+    availableWps,
+    speechesByParty,
+    filters,
+    activeSet,
+    toggleParty,
+    setPeriod,
+    reset,
+    filtersActive,
+  };
+
+  // Mobile: render as off-canvas drawer triggered from TopBar.
+  if (isMobile) {
+    if (!mobileOpen) return null;
+    return (
+      <>
+        <button
+          type="button"
+          aria-label="Schließen"
+          onClick={() => setMobileOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            top: 44,
+            background: "rgba(0,0,0,0.4)",
+            border: "none",
+            zIndex: 40,
+            cursor: "default",
+          }}
+        />
+        <aside
+          style={{
+            position: "fixed",
+            top: 44,
+            bottom: 0,
+            left: 0,
+            width: "min(82vw, 280px)",
+            background: "var(--panel)",
+            borderRight: "1px solid var(--hairline)",
+            padding: "18px 18px 16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+            zIndex: 41,
+            overflowY: "auto",
+            boxShadow: "var(--shadow-md, 0 6px 24px rgba(0,0,0,0.2))",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Filter schließen"
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              background: "transparent",
+              border: "1px solid var(--hairline)",
+              borderRadius: 4,
+              width: 26,
+              height: 26,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "var(--ink-2)",
+            }}
+          >
+            <Icon name="chev" size={12} />
+          </button>
+          <RailBody {...bodyProps} />
+        </aside>
+      </>
+    );
+  }
 
   if (collapsed) {
     return (
@@ -137,126 +366,7 @@ export function LeftRail() {
       >
         <Icon name="chevL" size={11} />
       </button>
-
-      <div>
-        <h4 style={SECTION_HEAD}>{m.leftrail_period()}</h4>
-        <div
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            color: "var(--ink-2)",
-            marginBottom: 4,
-          }}
-        >
-          {quarterLabel(stats.data?.earliestDate)} – {quarterLabel(stats.data?.latestDate)}
-        </div>
-        <div
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 10,
-            color: "var(--muted)",
-          }}
-        >
-          {formatGerman(stats.data?.totalSpeeches)} Reden im Korpus
-        </div>
-      </div>
-
-      <div>
-        <h4 style={SECTION_HEAD}>{m.leftrail_wahlperiode()}</h4>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
-          {PERIODS.filter((p) => availableWps.includes(p.id)).map((p) => {
-            const on = filters.period === p.id;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setPeriod(p.id)}
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  padding: "6px 0",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  border: "1px solid var(--hairline)",
-                  background: on ? "var(--ink)" : "transparent",
-                  color: on ? "var(--bg)" : "var(--ink-2)",
-                }}
-              >
-                {p.id}.
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div>
-        <h4 style={SECTION_HEAD}>{m.leftrail_factions()}</h4>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {PARTIES.map((p) => {
-            const on = activeSet.has(p.id);
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => toggleParty(p.id)}
-                aria-pressed={on}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 7,
-                  padding: "3px 6px",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  background: on ? "var(--bg-2)" : "transparent",
-                  border: `1px solid ${on ? "var(--hairline)" : "transparent"}`,
-                  textAlign: "left",
-                }}
-              >
-                <PartyDot id={p.id} size={8} />
-                <span
-                  style={{
-                    flex: 1,
-                    fontFamily: "var(--font-sans)",
-                    fontSize: 11,
-                    fontWeight: 500,
-                    color: on ? "var(--ink)" : "var(--ink-2)",
-                  }}
-                >
-                  {p.name}
-                </span>
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 9.5,
-                    color: "var(--muted)",
-                  }}
-                >
-                  {compactCount(speechesByParty[p.id])}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div style={{ flex: 1 }} />
-      <button
-        type="button"
-        onClick={reset}
-        className="btn-ghost"
-        disabled={!filtersActive}
-        style={{
-          alignSelf: "flex-start",
-          opacity: filtersActive ? 1 : 0.45,
-          color: filtersActive ? "var(--accent)" : "var(--muted)",
-          fontWeight: filtersActive ? 600 : 400,
-          cursor: filtersActive ? "pointer" : "default",
-        }}
-      >
-        <Icon name="reset" size={12} color={filtersActive ? "var(--accent)" : "var(--muted)"} />{" "}
-        {m.leftrail_reset_filters()}
-      </button>
+      <RailBody {...bodyProps} />
     </aside>
   );
 }

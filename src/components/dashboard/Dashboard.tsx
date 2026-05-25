@@ -13,6 +13,7 @@ import { SankeyTimeline } from "@/components/viz/SankeyTimeline";
 import { Scattertext } from "@/components/viz/Scattertext";
 import { PARTIES, type PartyId } from "@/data/parties";
 import { formatGerman, useCorpusStats } from "@/lib/hooks/useCorpusStats";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import { getAtlasPoints } from "@/lib/server/atlas";
 import { getPositioning } from "@/lib/server/positioning";
 import { getScattertext } from "@/lib/server/scattertext";
@@ -23,12 +24,14 @@ import { PanelHead } from "./PanelHead";
 
 const ALL_PARTY_IDS = PARTIES.map((p) => p.id);
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: dashboard is a 4-viz layout shell + mobile branch; splitting hurts readability more than it helps
 export function Dashboard() {
   const theme = useUI((s) => s.theme);
   const dark = theme === "dark";
   const params = useParams({ strict: false });
   const locale = (params.locale as string | undefined) ?? "de";
 
+  const isMobile = useIsMobile();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const [filters, setFilters] = useFilters();
@@ -108,14 +111,24 @@ export function Dashboard() {
       }}
     >
       <TopBar />
-      <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          minHeight: 0,
+          overflow: isMobile ? "auto" : "hidden",
+        }}
+      >
         <LeftRail />
         <div
           style={{
             flex: 1,
             display: "grid",
-            gridTemplateColumns: "1.1fr 1fr",
-            gridTemplateRows: "minmax(160px, 200px) 1fr 110px",
+            gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr",
+            gridTemplateRows: isMobile
+              ? "auto auto auto auto auto auto"
+              : "minmax(160px, 200px) 1fr 110px",
+            gridAutoRows: isMobile ? "auto" : undefined,
             gap: 1,
             background: "var(--hairline)",
             padding: 1,
@@ -123,14 +136,17 @@ export function Dashboard() {
             minHeight: 0,
           }}
         >
-          {/* Atlas — full-height left */}
+          {/* Atlas — full-height left on desktop, fixed-height first card on mobile */}
           <div
             style={{
-              gridRow: "1 / span 3",
+              gridRow: isMobile ? "auto" : "1 / span 3",
+              gridColumn: isMobile ? "1" : undefined,
               background: "var(--panel)",
               display: "flex",
               flexDirection: "column",
               minWidth: 0,
+              height: isMobile ? "60vh" : undefined,
+              minHeight: isMobile ? 360 : undefined,
             }}
           >
             <PanelHead
@@ -280,12 +296,13 @@ export function Dashboard() {
           {/* Sankey */}
           <div
             style={{
-              gridColumn: 2,
-              gridRow: 1,
+              gridColumn: isMobile ? "1" : 2,
+              gridRow: isMobile ? "auto" : 1,
               background: "var(--panel)",
               display: "flex",
               flexDirection: "column",
               minWidth: 0,
+              minHeight: isMobile ? 240 : undefined,
             }}
           >
             <PanelHead
@@ -358,10 +375,10 @@ export function Dashboard() {
           {/* Positioning + Scattertext */}
           <div
             style={{
-              gridColumn: 2,
-              gridRow: 2,
+              gridColumn: isMobile ? "1" : 2,
+              gridRow: isMobile ? "auto" : 2,
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
               gap: 1,
               backgroundColor: "var(--hairline)",
               minWidth: 0,
@@ -373,6 +390,7 @@ export function Dashboard() {
                 display: "flex",
                 flexDirection: "column",
                 minWidth: 0,
+                minHeight: isMobile ? 320 : undefined,
               }}
             >
               <PanelHead
@@ -451,6 +469,7 @@ export function Dashboard() {
                 display: "flex",
                 flexDirection: "column",
                 minWidth: 0,
+                minHeight: isMobile ? 320 : undefined,
               }}
             >
               <PanelHead
@@ -476,8 +495,8 @@ export function Dashboard() {
           {/* Profil der Woche */}
           <div
             style={{
-              gridColumn: 2,
-              gridRow: 3,
+              gridColumn: isMobile ? "1" : 2,
+              gridRow: isMobile ? "auto" : 3,
               background: "var(--panel)",
               display: "flex",
               flexDirection: "column",
