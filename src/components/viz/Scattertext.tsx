@@ -83,7 +83,7 @@ export function Scattertext({
         fontFamily="var(--font-sans)"
         fontSize={10}
         fontWeight={500}
-        fill={B.id === "cdu" ? "var(--ink)" : B.colorVar}
+        fill={B.colorVar}
         textAnchor="start"
       >
         ← typischer für {B.name}
@@ -94,7 +94,7 @@ export function Scattertext({
         fontFamily="var(--font-sans)"
         fontSize={10}
         fontWeight={500}
-        fill={A.id === "cdu" ? "var(--ink)" : A.colorVar}
+        fill={A.colorVar}
         textAnchor="end"
       >
         typischer für {A.name} →
@@ -148,16 +148,7 @@ export function Scattertext({
         return placed.map(({ row: s, cx, cy, sz }) => {
           const isHi = hoveredW === s.w;
           const dim = hoveredW && hoveredW !== s.w;
-          const fill =
-            s.x > 0.4
-              ? A.id === "cdu"
-                ? "var(--ink)"
-                : A.colorVar
-              : s.x < -0.4
-                ? B.id === "cdu"
-                  ? "var(--ink)"
-                  : B.colorVar
-                : "var(--muted)";
+          const fill = s.x > 0.4 ? A.colorVar : s.x < -0.4 ? B.colorVar : "var(--muted)";
           return (
             <text
               key={s.w}
