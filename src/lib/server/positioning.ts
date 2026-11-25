@@ -157,7 +157,7 @@ export function computePositioning(
 
 /** Fetch + compute MP positioning for a topic. */
 export const getPositioning = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown): { topic: string | null; axisA: string; axisB: string } => {
+  .validator((input: unknown): { topic: string | null; axisA: string; axisB: string } => {
     if (typeof input !== "object" || input === null) {
       return { topic: null, axisA: "afd", axisB: "grn" };
     }

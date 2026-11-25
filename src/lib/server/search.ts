@@ -30,7 +30,7 @@ const DEFAULT_LIMIT = 12;
  *   or post-process — for the cmdk list we treat as plain text and strip the tags.
  */
 export const searchSpeeches = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown): { q: string; limit: number } => {
+  .validator((input: unknown): { q: string; limit: number } => {
     if (input === null || input === undefined) {
       return { q: "", limit: DEFAULT_LIMIT };
     }
