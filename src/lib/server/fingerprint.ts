@@ -270,7 +270,7 @@ export function computeFingerprints(rows: RawRow[], topN: number): FingerprintRe
 
 /** Top-N MPs by speech count, each with their per-quarter fingerprint. */
 export const getMpFingerprints = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown): { topN: number; extId: string | null } => {
+  .validator((input: unknown): { topN: number; extId: string | null } => {
     if (typeof input !== "object" || input === null) return { topN: 8, extId: null };
     const obj = input as { topN?: unknown; extId?: unknown };
     let topN = 8;

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FillIn, LegalLayout, P, Section } from "@/components/legal/LegalLayout";
+import { LegalLayout, P, Section } from "@/components/legal/LegalLayout";
 
 export const Route = createFileRoute("/$locale/impressum")({
   component: ImpressumPage,
@@ -11,45 +11,40 @@ function ImpressumPage() {
     <LegalLayout title="Impressum" eyebrow="Anbieterkennzeichnung nach § 5 DDG" locale={locale}>
       <Section id="anbieter" title="Anbieter">
         <P>
-          <FillIn>VOR- UND NACHNAME</FillIn>
+          Noel Huibers
           <br />
-          <FillIn>STRASSE UND HAUSNUMMER</FillIn>
+          c/o Impressumservice Dein-Impressum
           <br />
-          <FillIn>PLZ ORT</FillIn>
+          Stettiner Str. 41
           <br />
-          <FillIn>LAND</FillIn>
+          35410 Hungen
+          <br />
+          Deutschland
         </P>
       </Section>
 
       <Section id="kontakt" title="Kontakt">
         <P>
-          E-Mail: <FillIn>kontakt@beispiel.de</FillIn>
-          <br />
-          Telefon: <FillIn>+49 …</FillIn>
-        </P>
-      </Section>
-
-      <Section id="verantwortlich" title="Inhaltlich Verantwortlich (§ 18 Abs. 2 MStV)">
-        <P>
-          <FillIn>VOR- UND NACHNAME</FillIn>
-          <br />
-          <FillIn>ANSCHRIFT WIE OBEN</FillIn>
-        </P>
-      </Section>
-
-      <Section id="streitbeilegung" title="EU-Streitbeilegung">
-        <P>
-          Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:{" "}
+          E-Mail:{" "}
           <a
-            href="https://ec.europa.eu/consumers/odr/"
-            target="_blank"
-            rel="noreferrer noopener"
+            href="mailto:politscope@huibers.io"
             style={{ color: "var(--accent)", textDecoration: "none" }}
           >
-            ec.europa.eu/consumers/odr
+            politscope@huibers.io
           </a>
-          .
+          <br />
+          Telefon:{" "}
+          <a href="tel:+4915792341658" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            {locale === "en" ? "+49 157 9234 1658" : "0157 9234 1658"}
+          </a>
         </P>
+      </Section>
+
+      <Section id="verantwortlich" title="Inhaltlich verantwortlich nach § 18 Abs. 2 MStV">
+        <P>Noel Huibers, Anschrift wie oben</P>
+      </Section>
+
+      <Section id="streitbeilegung" title="Verbraucherstreitbeilegung">
         <P>
           Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer
           Verbraucherschlichtungsstelle teilzunehmen.

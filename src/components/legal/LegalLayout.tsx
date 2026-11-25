@@ -168,27 +168,6 @@ export function Section({
   );
 }
 
-/** Visually distinct "needs filling in" placeholder — never ship to prod with these visible. */
-export function FillIn({ children }: { children: ReactNode }) {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "1px 8px",
-        background: "color-mix(in srgb, var(--accent) 18%, transparent)",
-        border: "1px dashed var(--accent)",
-        borderRadius: 4,
-        color: "var(--accent)",
-        fontFamily: "var(--font-mono)",
-        fontSize: 12.5,
-        letterSpacing: "0.02em",
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
 export function P({ children }: { children: ReactNode }) {
   return <p style={{ margin: "0 0 12px" }}>{children}</p>;
 }

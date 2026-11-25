@@ -20,7 +20,7 @@ export type SpeechDetail = {
 
 /** Fetch one speech by id with parent session + speaker details. */
 export const getSpeechById = createServerFn({ method: "GET" })
-  .inputValidator((id: unknown): { id: string } => {
+  .validator((id: unknown): { id: string } => {
     if (typeof id !== "string" || id.length === 0) {
       throw new Error("id must be a non-empty string");
     }

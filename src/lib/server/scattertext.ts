@@ -107,7 +107,7 @@ export function computeScattertext(
 }
 
 export const getScattertext = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown): { topic: string | null; partyA: string; partyB: string } => {
+  .validator((input: unknown): { topic: string | null; partyA: string; partyB: string } => {
     if (typeof input !== "object" || input === null) {
       return { topic: null, partyA: "afd", partyB: "grn" };
     }

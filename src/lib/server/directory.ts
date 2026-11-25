@@ -54,7 +54,7 @@ export type SpeechListRow = {
 
 /** Top-N MPs by speech count across the entire corpus. */
 export const getTopMps = createServerFn({ method: "GET" })
-  .inputValidator((limit: unknown): { limit: number } => ({
+  .validator((limit: unknown): { limit: number } => ({
     limit: typeof limit === "number" && limit > 0 && limit <= 100 ? Math.floor(limit) : 8,
   }))
   .handler(async ({ data }): Promise<TopMp[]> => {
@@ -87,7 +87,7 @@ export const getTopMps = createServerFn({ method: "GET" })
 
 /** Profile for one MP by Bundestag extId, with derived speech stats. */
 export const getMpByExtId = createServerFn({ method: "GET" })
-  .inputValidator((extId: unknown): { extId: string } => {
+  .validator((extId: unknown): { extId: string } => {
     if (typeof extId !== "string" || extId.length === 0) {
       throw new Error("extId must be a non-empty string");
     }
@@ -175,7 +175,7 @@ export const getAllMps = createServerFn({ method: "GET" }).handler(async (): Pro
 
 /** Speeches authored by one MP (by extId), most recent first. */
 export const getSpeechesByMp = createServerFn({ method: "GET" })
-  .inputValidator((extId: unknown): { extId: string } => {
+  .validator((extId: unknown): { extId: string } => {
     if (typeof extId !== "string" || extId.length === 0) {
       throw new Error("extId must be a non-empty string");
     }
@@ -219,7 +219,7 @@ export const getSpeechesByMp = createServerFn({ method: "GET" })
 
 /** All speeches in one session, in TOP order. */
 export const getSpeechesBySession = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown): { wahlperiode: number; sitzung: number } => {
+  .validator((input: unknown): { wahlperiode: number; sitzung: number } => {
     if (input === null || typeof input !== "object") {
       throw new Error("expected { wahlperiode, sitzung }");
     }
@@ -298,7 +298,7 @@ export const getAllSessions = createServerFn({ method: "GET" }).handler(
 
 /** Most recent N sessions by date — used by BottomStrip "recent debates". */
 export const getRecentSessions = createServerFn({ method: "GET" })
-  .inputValidator((limit: unknown): { limit: number } => ({
+  .validator((limit: unknown): { limit: number } => ({
     limit: typeof limit === "number" && limit > 0 && limit <= 50 ? Math.floor(limit) : 4,
   }))
   .handler(async ({ data }): Promise<RecentSession[]> => {

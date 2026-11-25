@@ -32,7 +32,7 @@ const TOP_K = 12;
  * we'd materialize a `mp_top_phrases` table refreshed nightly (see #28).
  */
 export const getMpDistinctivePhrases = createServerFn({ method: "GET" })
-  .inputValidator((extId: unknown): { extId: string } => {
+  .validator((extId: unknown): { extId: string } => {
     if (typeof extId !== "string" || extId.length === 0) {
       throw new Error("extId must be a non-empty string");
     }

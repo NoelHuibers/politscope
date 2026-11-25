@@ -64,7 +64,7 @@ export type AtlasFilters = {
  * filtering for cross-filter comparisons, that's a follow-up.
  */
 export const getAtlasPoints = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown): AtlasFilters => {
+  .validator((input: unknown): AtlasFilters => {
     if (input === null || input === undefined) return {};
     if (typeof input !== "object") return {};
     const obj = input as { parties?: unknown; wahlperiode?: unknown; topic?: unknown };

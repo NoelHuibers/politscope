@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FillIn, LegalLayout, P, Section } from "@/components/legal/LegalLayout";
+import { LegalLayout, P, Section } from "@/components/legal/LegalLayout";
 
 export const Route = createFileRoute("/$locale/datenschutz")({
   component: DatenschutzPage,
@@ -11,7 +11,7 @@ function DatenschutzPage() {
     <LegalLayout
       title="Datenschutzerklärung"
       eyebrow="DSGVO / BDSG"
-      lastUpdated="Stand: noch zu finalisieren"
+      lastUpdated="Stand: 25.11.2026"
       locale={locale}
     >
       <Section id="ueberblick" title="1. Datenschutz auf einen Blick">
@@ -27,13 +27,23 @@ function DatenschutzPage() {
       <Section id="verantwortlich" title="2. Verantwortlicher">
         <P>Verantwortlich im Sinne der DSGVO und sonstiger nationaler Datenschutzgesetze ist:</P>
         <P>
-          <FillIn>VOR- UND NACHNAME</FillIn>
+          Noel Huibers
           <br />
-          <FillIn>STRASSE UND HAUSNUMMER</FillIn>
+          c/o Impressumservice Dein-Impressum
           <br />
-          <FillIn>PLZ ORT, LAND</FillIn>
+          Stettiner Str. 41
           <br />
-          E-Mail: <FillIn>kontakt@beispiel.de</FillIn>
+          35410 Hungen
+          <br />
+          Deutschland
+          <br />
+          E-Mail:{" "}
+          <a
+            href="mailto:politscope@huibers.io"
+            style={{ color: "var(--accent)", textDecoration: "none" }}
+          >
+            politscope@huibers.io
+          </a>
         </P>
       </Section>
 
@@ -97,11 +107,6 @@ function DatenschutzPage() {
       <Section id="cookies" title="6. Cookies, lokaler Speicher">
         <P>
           PolitScope setzt <strong>keine Tracking-Cookies</strong> und nutzt kein Web-Analyse-Tool.
-          Folgende technisch notwendige Speicherorte werden lokal in Ihrem Browser verwendet:
-        </P>
-        <P>
-          <strong>localStorage</strong> für Ihre Theme-Präferenz (hell/dunkel) und ggf. UI-State wie
-          ausgeklappte LeftRail. Diese Daten verlassen Ihr Gerät nicht.
         </P>
         <P>
           <strong>URL-Query-Parameter</strong> spiegeln Filter- und Suchzustand wieder, damit Sie
@@ -112,10 +117,9 @@ function DatenschutzPage() {
       <Section id="logs" title="7. Server-Logs">
         <P>
           Die Vercel-Plattform erstellt automatisch Server-Logs (HTTP-Statuscode, Zeitstempel,
-          User-Agent, anonymisierte IP). Diese Daten dienen ausschließlich dem stabilen Betrieb, der
-          Sicherheit und der Fehlerdiagnose; sie werden nicht mit anderen Quellen zusammengeführt
-          und nach <FillIn>30 TAGE</FillIn> automatisch gelöscht. Rechtsgrundlage: Art. 6 Abs. 1
-          lit. f DSGVO.
+          User-Agent, IP-Adresse). Diese Daten dienen ausschließlich dem stabilen Betrieb, der
+          Sicherheit und der Fehlerdiagnose; sie werden nicht mit anderen Quellen zusammengeführt.
+          Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.
         </P>
       </Section>
 
@@ -141,9 +145,9 @@ function DatenschutzPage() {
 
       <Section id="beschwerde" title="9. Beschwerderecht bei der Aufsichtsbehörde">
         <P>
-          Sie haben das Recht auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde, insbesondere in
-          dem Mitgliedstaat Ihres Aufenthaltsorts. Zuständig für den Sitz des Verantwortlichen ist{" "}
-          <FillIn>AUFSICHTSBEHÖRDE DES BUNDESLANDES</FillIn>.
+          Sie haben das Recht auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO),
+          insbesondere in dem Mitgliedstaat Ihres gewöhnlichen Aufenthaltsorts, Ihres Arbeitsplatzes
+          oder des Orts des mutmaßlichen Verstoßes.
         </P>
       </Section>
 
